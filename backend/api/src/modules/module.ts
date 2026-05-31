@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, tables } from "@vendme/db";
 import type { RevocationStore } from "@vendme/auth";
 import { authenticate } from "../middleware/authenticate.js";
+import { requireActiveSubscription } from "../middleware/require-active-subscription.js";
 import { asyncHandler } from "../lib/async-handler.js";
 import { notFound, unauthorized } from "../lib/context.js";
 
@@ -50,9 +51,12 @@ function moduleGate(moduleKey: string): RequestHandler {
 }
 
 /**
- * Mounts each module under `/v1/{key}`, fronted by authentication and (when the
- * module declares `requiresModule`) the enablement gate. Authentication runs
- * first so the gate can read the resolved company from `req.ctx`.
+ * Mounts each module under `/v1/{key}`, fronted by authentication, the
+ * active-subscription gate (ADR-0005), and (when the module declares
+ * `requiresModule`) the enablement gate. Authentication runs first so the gates
+ * can read the resolved company from `req.ctx`; the subscription gate runs
+ * before the enablement gate so a lapsed Company gets 402 rather than a 404 that
+ * leaks whether the module is on.
  */
 export function mountModules(
   parent: Router,
@@ -60,7 +64,7 @@ export function mountModules(
   revocations: RevocationStore,
 ): void {
   for (const mod of modules) {
-    const guards: RequestHandler[] = [authenticate(revocations)];
+    const guards: RequestHandler[] = [authenticate(revocations), requireActiveSubscription()];
     if (mod.requiresModule) guards.push(moduleGate(mod.requiresModule));
     parent.use(`/${mod.key}`, ...guards, mod.router());
   }

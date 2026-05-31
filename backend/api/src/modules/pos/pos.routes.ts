@@ -5,13 +5,16 @@ import type { RevocationStore } from "@vendme/auth";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { unauthorized } from "../../lib/context.js";
 import { authenticate } from "../../middleware/authenticate.js";
+import { requireActiveSubscription } from "../../middleware/require-active-subscription.js";
 import { requirePermission } from "../../middleware/require-permission.js";
 import { processBatch } from "./pos.service.js";
 import { getReceipt, listRecentOrders } from "./receipt.service.js";
 
 export function posRouter(revocations: RevocationStore): Router {
   const router: Router = Router();
-  const auth = authenticate(revocations);
+  // Every tenant route runs behind authentication AND the active-subscription
+  // gate (ADR-0005): a lapsed Company gets 402, not data.
+  const auth = [authenticate(revocations), requireActiveSubscription()];
 
   /**
    * Submit a batch of POS events (the offline outbox replays here). No blanket

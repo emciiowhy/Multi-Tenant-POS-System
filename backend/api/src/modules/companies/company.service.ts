@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db, tables, withCompany } from "@vendme/db";
 import { PERMISSIONS, SYSTEM_ROLES, WILDCARD, resolvePermissions } from "@vendme/auth";
 import { badRequest } from "../../lib/context.js";
+import { ensureTrialSubscription } from "../billing/subscription.service.js";
 
 /** A minimal default chart of accounts so posting works out of the box. */
 const DEFAULT_CHART: { code: string; name: string; type: string }[] = [
@@ -109,6 +110,10 @@ export async function createCompanyWithOwner(input: {
       .returning({ id: tables.memberships.id });
     return membership!.id;
   });
+
+  // 5. Start the company on a free trial so it's usable from day one and passes
+  //    the subscription gate (ADR-0005). Real billing is wired by Stripe later.
+  await ensureTrialSubscription(companyId);
 
   return { id: companyId, name: company!.name, slug, ownerMembershipId };
 }

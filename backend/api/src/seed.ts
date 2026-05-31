@@ -5,6 +5,7 @@ import { db, tables, withCompany } from "@vendme/db";
 import { hashPassword } from "@vendme/auth";
 import type { PosEvent } from "@vendme/contracts";
 import { createCompanyWithOwner } from "./modules/companies/company.service.js";
+import { backfillTrialSubscriptions } from "./modules/billing/subscription.service.js";
 import { processBatch } from "./modules/pos/pos.service.js";
 
 /**
@@ -101,6 +102,13 @@ export async function seedDemo(): Promise<SeedResult> {
     console.log("→ demo account already exists; skipping reseed.");
     if (!found) throw new Error("demo account exists but has no company/branch");
     await ensureDemoAccess(found.companyId, existing.id);
+    // Backfill trials so the subscription gate (ADR-0005) doesn't lock out the
+    // demo — or any Company — that predates billing.
+    const backfilled = await backfillTrialSubscriptions();
+    if (backfilled > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`→ backfilled ${backfilled} trial subscription(s)`);
+    }
     printAccess(found.branchId);
     return found;
   }

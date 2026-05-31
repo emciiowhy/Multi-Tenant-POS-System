@@ -5,6 +5,7 @@ import type { RevocationStore } from "@vendme/auth";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { unauthorized } from "../../lib/context.js";
 import { authenticate } from "../../middleware/authenticate.js";
+import { requireActiveSubscription } from "../../middleware/require-active-subscription.js";
 import { requirePermission } from "../../middleware/require-permission.js";
 import { addCashMovement, closeShift, openShift } from "./shift.service.js";
 
@@ -21,7 +22,8 @@ const cashMovementInput = z.object({
 
 export function shiftRouter(revocations: RevocationStore): Router {
   const router: Router = Router();
-  const auth = authenticate(revocations);
+  // authenticate + active-subscription gate (ADR-0005) on every shift route.
+  const auth = [authenticate(revocations), requireActiveSubscription()];
 
   router.post(
     "/",

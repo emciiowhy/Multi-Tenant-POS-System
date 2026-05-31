@@ -99,6 +99,33 @@ async function main(): Promise<void> {
     );
 
     // eslint-disable-next-line no-console
+    console.log("\n[4] billing: the seeded company is on a trial the gate allows");
+    const { loadSubscription, ensureTrialSubscription } = await import(
+      "./modules/billing/subscription.service.js"
+    );
+    const { decideAccess } = await import("./modules/billing/entitlement.logic.js");
+    const sub = await loadSubscription(companyId);
+    assert(sub?.status === "trialing", `demo company is on a trialing subscription (got ${sub?.status})`);
+    assert(decideAccess(sub, new Date()).allowed, "gate ALLOWS the in-trial demo company");
+    const createdAgain = await ensureTrialSubscription(companyId);
+    assert(createdAgain === false, "ensureTrialSubscription is idempotent (no duplicate trial)");
+
+    // Manually expire the trial → the same policy now blocks the company.
+    const { withCompany, tables } = await import("@vendme/db");
+    const { eq } = await import("drizzle-orm");
+    await withCompany(companyId, (tx) =>
+      tx
+        .update(tables.subscriptions)
+        .set({ currentPeriodEnd: new Date(Date.now() - 24 * 60 * 60 * 1000) })
+        .where(eq(tables.subscriptions.companyId, companyId)),
+    );
+    const expired = await loadSubscription(companyId);
+    assert(
+      !decideAccess(expired, new Date()).allowed,
+      "gate BLOCKS the demo company once its trial has expired",
+    );
+
+    // eslint-disable-next-line no-console
     console.log(`\n✓ ALL ${passed} CHECKS PASSED — backend ran for real against Postgres (PGlite).`);
   } finally {
     await server.stop();
