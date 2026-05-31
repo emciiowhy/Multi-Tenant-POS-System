@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { posEventBatch } from "@vendme/contracts";
 import type { RevocationStore } from "@vendme/auth";
 import { asyncHandler } from "../../lib/async-handler.js";
@@ -6,7 +7,7 @@ import { unauthorized } from "../../lib/context.js";
 import { authenticate } from "../../middleware/authenticate.js";
 import { requirePermission } from "../../middleware/require-permission.js";
 import { processBatch } from "./pos.service.js";
-import { getReceipt } from "./receipt.service.js";
+import { getReceipt, listRecentOrders } from "./receipt.service.js";
 
 export function posRouter(revocations: RevocationStore): Router {
   const router: Router = Router();
@@ -25,6 +26,18 @@ export function posRouter(revocations: RevocationStore): Router {
       const { events } = posEventBatch.parse(req.body);
       const results = await processBatch(req.ctx.companyId, req.ctx.role, events);
       res.json({ results });
+    }),
+  );
+
+  // Recent orders for a branch — the returns/refunds screen lists these.
+  router.get(
+    "/orders",
+    auth,
+    requirePermission("pos:order:refund"),
+    asyncHandler(async (req, res) => {
+      if (!req.ctx) throw unauthorized();
+      const branchId = z.string().uuid().parse(req.query.branchId);
+      res.json(await listRecentOrders(req.ctx.companyId, branchId));
     }),
   );
 

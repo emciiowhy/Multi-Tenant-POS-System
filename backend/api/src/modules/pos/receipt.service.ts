@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { tables, withCompany } from "@vendme/db";
 import { notFound } from "../../lib/context.js";
 
@@ -50,5 +50,29 @@ export async function getReceipt(companyId: string, orderClientUuid: string) {
       lines,
       payments,
     };
+  });
+}
+
+/** Recent orders for a branch (newest first), for the returns/refunds screen. */
+export async function listRecentOrders(companyId: string, branchId: string) {
+  return withCompany(companyId, async (tx) => {
+    return tx
+      .select({
+        id: tables.orders.id,
+        clientUuid: tables.orders.clientUuid,
+        status: tables.orders.status,
+        grandTotal: tables.orders.grandTotal,
+        settledAt: tables.orders.settledAt,
+        createdAt: tables.orders.createdAt,
+      })
+      .from(tables.orders)
+      .where(
+        and(
+          eq(tables.orders.companyId, companyId),
+          eq(tables.orders.branchId, branchId),
+        ),
+      )
+      .orderBy(desc(tables.orders.createdAt))
+      .limit(50);
   });
 }

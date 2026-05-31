@@ -2,12 +2,15 @@ import type { PosEvent } from "@vendme/contracts";
 
 export type OutboxStatus = "pending" | "applied" | "failed";
 
-/** A queued, durable unit of work — one POS sale's event batch. */
+/** What kind of POS work a batch represents (a sale or a refund). */
+export type BatchKind = "pos.sale" | "pos.refund";
+
+/** A queued, durable unit of work — one POS sale's or refund's event batch. */
 export interface OutboxEntry {
-  /** Batch id; the dedupe/idempotency key for the whole sale. */
+  /** Batch id; the dedupe/idempotency key for the whole batch. */
   id: string;
-  kind: "pos.sale";
-  /** The order.open → order.fire → order.settle events, each with a client_uuid. */
+  kind: BatchKind;
+  /** The events (e.g. open→fire→settle, or a single refund), each with a client_uuid. */
   events: PosEvent[];
   status: OutboxStatus;
   attempts: number;
@@ -18,7 +21,7 @@ export interface OutboxEntry {
 /** What the caller hands `enqueue` (status/attempts are assigned by the Outbox). */
 export interface NewBatch {
   id: string;
-  kind: "pos.sale";
+  kind: BatchKind;
   events: PosEvent[];
 }
 

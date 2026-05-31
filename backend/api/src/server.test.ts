@@ -51,6 +51,10 @@ describe("backend-api wiring", () => {
       "/v1/companies/branches/11111111-1111-1111-1111-111111111111/registers",
     );
     expect(registers.status).toBe(401);
+    const orders = await request(app).get(
+      "/v1/pos/orders?branchId=11111111-1111-1111-1111-111111111111",
+    );
+    expect(orders.status).toBe(401);
   });
 
   it("mounts the restaurant module and gates it behind auth (401, not 404)", async () => {
