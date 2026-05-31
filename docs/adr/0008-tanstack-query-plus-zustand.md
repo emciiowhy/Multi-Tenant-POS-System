@@ -12,3 +12,4 @@ Client state is split by ownership. **TanStack Query** owns all server-derived s
 
 - The POS cart is intentionally *not* in TanStack Query — it is local, ephemeral, and only produces server events on fire/settle.
 - Mutation outbox + `client_uuid` idempotency is the contract between client and the append-only ledger; both sides must honor it.
+- **Refinements after implementation:** the offline *write* path turned out bespoke rather than reusing TanStack Query's mutation persistence — **ADR-0013** records and supersedes that part of this decision (the persisted query *cache* is still used for reads). And the realtime protocol that applies server deltas into this cache is **ADR-0014**.

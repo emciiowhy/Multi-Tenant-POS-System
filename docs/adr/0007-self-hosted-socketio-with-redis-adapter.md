@@ -12,3 +12,4 @@ Realtime runs on the Express API process (ADR-0003) using Socket.IO with `@socke
 
 - The API deploy target must support persistent WebSocket connections (Railway/Fly, not Vercel functions) and sticky sessions or a Redis-backed adapter — we use the adapter.
 - We own scaling and Redis HA for realtime; that is an accepted operational cost.
+- This ADR is the transport choice; the application protocol on top of it — a transport-agnostic bus, validated tenant rooms, and precise deltas applied in place into the client cache — is **ADR-0014**.
