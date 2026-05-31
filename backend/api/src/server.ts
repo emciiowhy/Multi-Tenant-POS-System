@@ -12,6 +12,7 @@ import { catalogRouter } from "./modules/catalog/catalog.routes.js";
 import { inventoryRouter } from "./modules/inventory/inventory.routes.js";
 import { posRouter } from "./modules/pos/pos.routes.js";
 import { shiftRouter } from "./modules/shifts/shift.routes.js";
+import { billingRouter } from "./modules/billing/billing.routes.js";
 import { mountModules } from "./modules/module.js";
 import { restaurantModule } from "./modules/restaurant/restaurant.routes.js";
 
@@ -30,6 +31,9 @@ export function createServer(
   app.disable("x-powered-by");
   app.use(helmet());
   app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
+  // Stripe webhook signature verification needs the RAW body, so it must parse
+  // before (and instead of) express.json for that one path (ADR-0005, issue 05).
+  app.use("/v1/billing/webhook", express.raw({ type: "*/*" }));
   app.use(express.json({ limit: "1mb" }));
   app.use(pinoHttp());
   app.use(
@@ -52,6 +56,8 @@ export function createServer(
   v1.use("/inventory", inventoryRouter(revocations));
   v1.use("/pos", posRouter(revocations));
   v1.use("/shifts", shiftRouter(revocations));
+  // Billing is NOT subscription-gated (a lapsed Company must still be able to pay).
+  v1.use("/billing", billingRouter(revocations));
 
   // Pluggable product modules (ADR-0005), each gated per-company. Restaurant is
   // the first consumer of the module seam.

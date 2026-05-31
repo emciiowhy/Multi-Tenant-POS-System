@@ -19,6 +19,10 @@ export interface StripeObjectLike {
   subscription?: string | null;
   /** Invoice period end, unix seconds. */
   periodEnd?: number | null;
+  /** Invoice number (for the local audit row; the reducer ignores it). */
+  number?: string | null;
+  /** Invoice amount paid, in the currency's minor unit / cents (reducer ignores). */
+  amountPaid?: number | null;
 }
 
 export interface StripeEventLike {

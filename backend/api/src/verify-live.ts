@@ -3,6 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
+import type { BillingProvider } from "./modules/billing/billing.provider.js";
+import type { StripeEventLike } from "./modules/billing/stripe-webhook.logic.js";
 
 /**
  * Headless "for real" verification of the Restaurant backend. Boots an
@@ -124,6 +126,42 @@ async function main(): Promise<void> {
       !decideAccess(expired, new Date()).allowed,
       "gate BLOCKS the demo company once its trial has expired",
     );
+
+    // eslint-disable-next-line no-console
+    console.log("\n[5] billing webhook: a verified event upserts the local mirror (idempotent)");
+    const billing = await import("./modules/billing/billing.service.js");
+    const CUSTOMER = "cus_demo_1";
+    // Fake provider (the injected Stripe boundary): no network, returns a canned event.
+    const fakeProvider = (event?: StripeEventLike): BillingProvider => ({
+      ensureCustomer: async () => CUSTOMER,
+      createCheckoutSession: async () => ({ url: "https://stripe.test/checkout" }),
+      createPortalSession: async () => ({ url: "https://stripe.test/portal" }),
+      constructEvent: () => event ?? { type: "ignored", data: { object: { customer: CUSTOMER } } },
+    });
+
+    // Checkout links a Stripe Customer to the Company (persists stripeCustomerId).
+    await billing.createCheckoutSession(companyId, "standard", fakeProvider());
+    const periodEnd = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
+    const activeEvent: StripeEventLike = {
+      type: "customer.subscription.updated",
+      data: { object: { id: "sub_demo", customer: CUSTOMER, status: "active", current_period_end: periodEnd } },
+    };
+    await billing.applyWebhook("{}", "sig", fakeProvider(activeEvent));
+    const afterActive = await billing.getSubscription(companyId);
+    assert(afterActive?.status === "active", `webhook flipped the subscription to active (got ${afterActive?.status})`);
+    assert(afterActive?.plan?.key === "standard", "subscription view carries the plan");
+
+    await billing.applyWebhook("{}", "sig", fakeProvider(activeEvent));
+    const afterReplay = await billing.getSubscription(companyId);
+    assert(afterReplay?.status === "active", "re-delivering the same event is idempotent (still active)");
+
+    const cancelEvent: StripeEventLike = {
+      type: "customer.subscription.deleted",
+      data: { object: { id: "sub_demo", customer: CUSTOMER } },
+    };
+    await billing.applyWebhook("{}", "sig", fakeProvider(cancelEvent));
+    const afterCancel = await billing.getSubscription(companyId);
+    assert(afterCancel?.status === "canceled", "a deletion webhook cancels the local subscription");
 
     // eslint-disable-next-line no-console
     console.log(`\n✓ ALL ${passed} CHECKS PASSED — backend ran for real against Postgres (PGlite).`);

@@ -57,6 +57,20 @@ describe("backend-api wiring", () => {
     expect(orders.status).toBe(401);
   });
 
+  it("mounts billing routes: read/manage need auth; the webhook is unauthenticated but signature-gated", async () => {
+    // Billing is gate-exempt, but checkout/portal/read still require authentication.
+    const sub = await request(app).get("/v1/billing/subscription");
+    expect(sub.status).toBe(401);
+    const checkout = await request(app).post("/v1/billing/checkout").send({});
+    expect(checkout.status).toBe(401);
+    const portal = await request(app).post("/v1/billing/portal").send({});
+    expect(portal.status).toBe(401);
+    // The webhook takes no bearer token (so it must NOT 401) — it's gated by the
+    // Stripe signature instead, so a request lacking the header fails closed at 400.
+    const webhook = await request(app).post("/v1/billing/webhook");
+    expect(webhook.status).toBe(400);
+  });
+
   it("mounts the restaurant module and gates it behind auth (401, not 404)", async () => {
     const branchId = "11111111-1111-1111-1111-111111111111";
     const ticketId = "22222222-2222-2222-2222-222222222222";
