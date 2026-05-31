@@ -122,6 +122,46 @@ describe("ReplayEngine", () => {
     expect(outbox.all()[0]!.status).toBe("pending"); // not failed; queue survives
   });
 
+  it("on a 402 calls onBillingRequired and stops — queue stays pending, no retry storm", async () => {
+    const outbox = await outboxWith(["a", "b"]);
+    const onBillingRequired = vi.fn(async () => {});
+    const submit = vi.fn(async () => {
+      throw { status: 402 };
+    });
+    const engine = new ReplayEngine({ outbox, submit, online: fakeOnline(true), onBillingRequired });
+
+    await engine.flush();
+
+    expect(onBillingRequired).toHaveBeenCalledTimes(1);
+    expect(submit).toHaveBeenCalledTimes(1); // stopped after the billing block
+    // Not failed, not retried — the queue is intact and replays once billing is fixed.
+    expect(outbox.all()[0]).toMatchObject({ status: "pending", attempts: 0 });
+
+    await vi.advanceTimersByTimeAsync(60000); // no backoff retry was scheduled
+    expect(submit).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles 402 distinctly from 401 (billing block, not re-login)", async () => {
+    const outbox = await outboxWith(["a"]);
+    const onAuthError = vi.fn(async () => {});
+    const onBillingRequired = vi.fn(async () => {});
+    const submit = vi.fn(async () => {
+      throw { status: 402 };
+    });
+    const engine = new ReplayEngine({
+      outbox,
+      submit,
+      online: fakeOnline(true),
+      onAuthError,
+      onBillingRequired,
+    });
+
+    await engine.flush();
+
+    expect(onBillingRequired).toHaveBeenCalledTimes(1);
+    expect(onAuthError).not.toHaveBeenCalled();
+  });
+
   it("flushes automatically when connectivity returns", async () => {
     const outbox = await outboxWith(["a"]);
     const submit = vi.fn(async () => applied());

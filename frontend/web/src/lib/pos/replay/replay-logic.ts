@@ -24,9 +24,18 @@ export function backoffDelay(attempts: number, baseMs = 1000, capMs = 60000): nu
 /** A dead-session signal: the API still returned 401 after the transparent
  * token re-mint in apiFetch, so re-login is required. */
 export function isAuthError(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    (err as { status?: number }).status === 401
-  );
+  return statusOf(err) === 401;
+}
+
+/** A subscription-gate block (ADR-0005): the API returned 402. Neither a
+ * transport failure (don't back off forever) nor a per-event rejection (don't
+ * fail the batch) — stop draining and send the user to billing; the queue stays. */
+export function isBillingError(err: unknown): boolean {
+  return statusOf(err) === 402;
+}
+
+function statusOf(err: unknown): number | undefined {
+  return typeof err === "object" && err !== null
+    ? (err as { status?: number }).status
+    : undefined;
 }

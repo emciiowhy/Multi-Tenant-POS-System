@@ -1,6 +1,6 @@
 import type { PosEvent, PosEventResult } from "@vendme/contracts";
 import type { OutboxEntry } from "../outbox/types";
-import { backoffDelay, classifyResults, isAuthError } from "./replay-logic";
+import { backoffDelay, classifyResults, isAuthError, isBillingError } from "./replay-logic";
 
 /** The slice of the Outbox the engine drives. */
 export interface ReplayOutbox {
@@ -23,6 +23,9 @@ export interface ReplayEngineDeps {
   /** Called when a batch still 401s after apiFetch's transparent re-mint — a
    * dead session that needs re-login. */
   onAuthError?: () => Promise<void> | void;
+  /** Called when a batch is blocked by the subscription gate (402) — the Company
+   * must subscribe/pay; the user is sent to billing and the queue is preserved. */
+  onBillingRequired?: () => Promise<void> | void;
   baseMs?: number;
   capMs?: number;
 }
@@ -43,6 +46,7 @@ export class ReplayEngine {
   private readonly submit: ReplayEngineDeps["submit"];
   private readonly online: OnlineSignal;
   private readonly onAuthError?: ReplayEngineDeps["onAuthError"];
+  private readonly onBillingRequired?: ReplayEngineDeps["onBillingRequired"];
   private readonly baseMs: number;
   private readonly capMs: number;
 
@@ -55,6 +59,7 @@ export class ReplayEngine {
     this.submit = deps.submit;
     this.online = deps.online;
     this.onAuthError = deps.onAuthError;
+    this.onBillingRequired = deps.onBillingRequired;
     this.baseMs = deps.baseMs ?? 1000;
     this.capMs = deps.capMs ?? 60000;
   }
@@ -93,6 +98,10 @@ export class ReplayEngine {
           if (isAuthError(err)) {
             await this.onAuthError?.();
             return; // dead session: stop draining; queue survives
+          }
+          if (isBillingError(err)) {
+            await this.onBillingRequired?.();
+            return; // subscription block: stop draining; queue survives, replays after billing
           }
           await this.outbox.markRetry(entry.id, errorMessage(err));
           this.scheduleRetry(entry.attempts + 1);
