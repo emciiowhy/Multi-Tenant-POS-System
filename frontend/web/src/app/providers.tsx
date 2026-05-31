@@ -6,6 +6,7 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { getReplayEngine } from "@/lib/pos/replay";
 import { createIdbStorage } from "@/lib/query/idb-storage";
+import { BillingChrome } from "@/components/billing/billing-chrome";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -46,6 +47,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       client={queryClient}
       persistOptions={{ persister, maxAge: DAY_MS }}
     >
+      {/* App-shell billing: 402→/billing redirect + trial/past-due banner (ADR-0005). */}
+      <BillingChrome />
       {children}
     </PersistQueryClientProvider>
   );
