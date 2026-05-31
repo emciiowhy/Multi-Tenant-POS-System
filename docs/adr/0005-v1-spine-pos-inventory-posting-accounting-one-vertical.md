@@ -9,7 +9,7 @@ The product spec spans POS, ERP, Accounting, HR/Payroll, CRM, Inventory, three i
 - **Inventory**: stock deduction with conflict resolution.
 - **Accounting as a posting target only**: sales and refunds auto-generate journal entries into a chart of accounts, proving double-entry integrity. No AP/AR, bank-rec, or budgeting yet.
 - **Plug-in / module framework + the Restaurant vertical** (order lifecycle, Kitchen Display System, floor/table state). Chosen over Retail because it actually exercises module-injected workflow + realtime rather than duplicating the base POS.
-- **Billing**: a subscription gate, so it is genuinely a SaaS from day one.
+- **Billing**: a subscription gate, so it is genuinely a SaaS from day one (ADR-0012).
 
 ## Stubbed at the seam (interface defined, no implementation)
 
