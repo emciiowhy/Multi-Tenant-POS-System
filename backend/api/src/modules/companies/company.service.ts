@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, tables, withCompany } from "@vendme/db";
 import { PERMISSIONS, SYSTEM_ROLES, WILDCARD, resolvePermissions } from "@vendme/auth";
 import { badRequest } from "../../lib/context.js";
@@ -111,4 +111,23 @@ export async function createCompanyWithOwner(input: {
   });
 
   return { id: companyId, name: company!.name, slug, ownerMembershipId };
+}
+
+/** Registers in a branch, for picking a till when opening a Shift (RLS-scoped). */
+export async function listRegisters(companyId: string, branchId: string) {
+  return withCompany(companyId, async (tx) => {
+    return tx
+      .select({
+        id: tables.registers.id,
+        name: tables.registers.name,
+        branchId: tables.registers.branchId,
+      })
+      .from(tables.registers)
+      .where(
+        and(
+          eq(tables.registers.companyId, companyId),
+          eq(tables.registers.branchId, branchId),
+        ),
+      );
+  });
 }

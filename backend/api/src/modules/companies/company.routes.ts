@@ -6,7 +6,7 @@ import type { RevocationStore } from "@vendme/auth";
 import { authenticate } from "../../middleware/authenticate.js";
 import { requirePermission } from "../../middleware/require-permission.js";
 import { listAccountMemberships } from "../auth/auth.service.js";
-import { createCompanyWithOwner } from "./company.service.js";
+import { createCompanyWithOwner, listRegisters } from "./company.service.js";
 
 const createInput = z.object({
   name: z.string().min(1),
@@ -40,6 +40,18 @@ export function companyRouter(revocations: RevocationStore): Router {
     asyncHandler(async (req, res) => {
       if (!req.ctx) throw unauthorized();
       res.json(await listAccountMemberships(req.ctx.accountId));
+    }),
+  );
+
+  // Registers in a branch — used by the POS to pick a till when opening a Shift.
+  router.get(
+    "/branches/:branchId/registers",
+    auth,
+    requirePermission("pos:shift:open"),
+    asyncHandler(async (req, res) => {
+      if (!req.ctx) throw unauthorized();
+      const branchId = z.string().uuid().parse(req.params.branchId);
+      res.json(await listRegisters(req.ctx.companyId, branchId));
     }),
   );
 

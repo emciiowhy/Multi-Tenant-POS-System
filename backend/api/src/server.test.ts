@@ -47,6 +47,10 @@ describe("backend-api wiring", () => {
     expect(shift.status).toBe(401);
     const inventory = await request(app).get("/v1/inventory/on-hand");
     expect(inventory.status).toBe(401);
+    const registers = await request(app).get(
+      "/v1/companies/branches/11111111-1111-1111-1111-111111111111/registers",
+    );
+    expect(registers.status).toBe(401);
   });
 
   it("mounts the restaurant module and gates it behind auth (401, not 404)", async () => {
