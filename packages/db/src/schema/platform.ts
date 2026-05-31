@@ -11,7 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { companies } from "./identity.js";
-import { pk, timestamps } from "./_shared.js";
+import { pk, timestamps, sql } from "./_shared.js";
 
 /** Subscription plans (global catalogue). */
 export const plans = pgTable(
@@ -54,7 +54,9 @@ export const usageCounters = pgTable(
       .notNull()
       .references(() => companies.id),
     metric: text("metric").notNull(),
-    value: bigint("value", { mode: "bigint" }).notNull().default(0n),
+    // SQL default (not 0n): a BigInt literal breaks drizzle-kit's snapshot
+    // JSON serializer; `sql\`0\`` is identical at the DB level.
+    value: bigint("value", { mode: "bigint" }).notNull().default(sql`0`),
     ...timestamps,
   },
   (t) => [uniqueIndex("usage_counters_company_metric_uq").on(t.companyId, t.metric)],

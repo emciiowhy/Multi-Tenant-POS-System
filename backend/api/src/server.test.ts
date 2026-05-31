@@ -48,4 +48,23 @@ describe("backend-api wiring", () => {
     const inventory = await request(app).get("/v1/inventory/on-hand");
     expect(inventory.status).toBe(401);
   });
+
+  it("mounts the restaurant module and gates it behind auth (401, not 404)", async () => {
+    const branchId = "11111111-1111-1111-1111-111111111111";
+    const ticketId = "22222222-2222-2222-2222-222222222222";
+    // The module seam applies authentication before the enablement gate, so an
+    // unauthenticated request fails closed with 401 rather than leaking 404.
+    const list = await request(app).get(`/v1/restaurant/kds/${branchId}/tickets`);
+    expect(list.status).toBe(401);
+    const transition = await request(app)
+      .post(`/v1/restaurant/kds/tickets/${ticketId}/transition`)
+      .send({ status: "preparing" });
+    expect(transition.status).toBe(401);
+    const floor = await request(app).get(`/v1/restaurant/floor/${branchId}`);
+    expect(floor.status).toBe(401);
+    const tableTransition = await request(app)
+      .post(`/v1/restaurant/tables/${ticketId}/transition`)
+      .send({ status: "seated" });
+    expect(tableTransition.status).toBe(401);
+  });
 });

@@ -43,6 +43,13 @@ export const tables = pgTable(
     seats: integer("seats").notNull().default(2),
     /** "free" | "seated" | "ordered" | "bill" */
     status: text("status").notNull().default("free"),
+    /** Floor-plan layout: position and size on the section canvas (px). */
+    posX: integer("pos_x").notNull().default(0),
+    posY: integer("pos_y").notNull().default(0),
+    width: integer("width").notNull().default(80),
+    height: integer("height").notNull().default(80),
+    /** "rect" | "circle" */
+    shape: text("shape").notNull().default("rect"),
     ...timestamps,
   },
   (t) => [

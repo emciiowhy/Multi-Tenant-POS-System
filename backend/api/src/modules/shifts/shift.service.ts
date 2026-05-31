@@ -2,13 +2,14 @@ import { and, eq } from "drizzle-orm";
 import { tables, withCompany } from "@vendme/db";
 import { badRequest, notFound } from "../../lib/context.js";
 import { computeExpectedDrawer, drawerVariance } from "./shift.logic.js";
+import { realtimeBus } from "../../realtime/bus.js";
 
 export async function openShift(
   companyId: string,
   input: { branchId: string; registerId: string; openingFloat: string; accountId: string },
 ) {
-  return withCompany(companyId, async (tx) => {
-    const [row] = await tx
+  const row = await withCompany(companyId, async (tx) => {
+    const [inserted] = await tx
       .insert(tables.shifts)
       .values({
         companyId,
@@ -19,8 +20,16 @@ export async function openShift(
         status: "open",
       })
       .returning();
-    return row!;
+    return inserted!;
   });
+
+  realtimeBus.publish({
+    companyId,
+    branchId: row.branchId,
+    event: { type: "shift.opened", shiftId: row.id, registerId: row.registerId },
+  });
+
+  return row;
 }
 
 export async function addCashMovement(
@@ -59,7 +68,7 @@ export async function closeShift(
   shiftId: string,
   counted: string,
 ): Promise<ShiftClosure> {
-  return withCompany(companyId, async (tx) => {
+  const { closure, branchId, registerId } = await withCompany(companyId, async (tx) => {
     const [shift] = await tx
       .select()
       .from(tables.shifts)
@@ -90,11 +99,23 @@ export async function closeShift(
       .where(eq(tables.shifts.id, shiftId));
 
     return {
-      shiftId,
-      openingFloat: shift.openingFloat,
-      expected,
-      counted,
-      variance,
+      closure: {
+        shiftId,
+        openingFloat: shift.openingFloat,
+        expected,
+        counted,
+        variance,
+      },
+      branchId: shift.branchId,
+      registerId: shift.registerId,
     };
   });
+
+  realtimeBus.publish({
+    companyId,
+    branchId,
+    event: { type: "shift.closed", shiftId, registerId },
+  });
+
+  return closure;
 }

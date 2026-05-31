@@ -6,8 +6,9 @@ import type { PosEvent, PosEventResult } from "@vendme/contracts";
 import { deriveUuid } from "../../lib/uuid.js";
 import { sumScaled } from "../../lib/decimal.js";
 import { computeOrderTotals, type PricedLine } from "./pos.logic.js";
-import { expandRecipe } from "../inventory/inventory.logic.js";
+import { computeOnHand, expandRecipe } from "../inventory/inventory.logic.js";
 import { postRefund, postSale } from "../accounting/accounting.service.js";
+import { realtimeBus, type RealtimeMessage } from "../../realtime/bus.js";
 
 /** Maps each POS event to the permission required to apply it (per-event RBAC). */
 const EVENT_PERMISSION: Record<PosEvent["type"], Permission> = {
@@ -61,6 +62,8 @@ async function applyFire(
   companyId: string,
   enabledRestaurant: boolean,
   e: Extract<PosEvent, { type: "order.fire" }>,
+  /** Post-commit deltas to broadcast; populated only on the success path. */
+  emissions: RealtimeMessage[],
 ): Promise<PosEventResult> {
   const order = await findOrder(tx, companyId, e.orderClientUuid);
   if (!order) return { clientUuid: e.clientUuid, status: "rejected", reason: "unknown order" };
@@ -177,13 +180,18 @@ async function applyFire(
   }
 
   // Restaurant: fire a kitchen ticket (guarded by the order status transition).
+  let kitchenTicketId: string | undefined;
   if (enabledRestaurant) {
-    await tx.insert(tables.kitchenTickets).values({
-      companyId,
-      branchId: order.branchId,
-      orderId: order.id,
-      status: "queued",
-    });
+    const [ticket] = await tx
+      .insert(tables.kitchenTickets)
+      .values({
+        companyId,
+        branchId: order.branchId,
+        orderId: order.id,
+        status: "queued",
+      })
+      .returning({ id: tables.kitchenTickets.id });
+    kitchenTicketId = ticket?.id;
   }
 
   await tx
@@ -197,6 +205,55 @@ async function applyFire(
       updatedAt: new Date(),
     })
     .where(and(eq(tables.orders.id, order.id), eq(tables.orders.status, "open")));
+
+  // Build the precise post-commit deltas (ADR-0008): the fired order, the new
+  // projected on-hand for each affected stock item, and — for restaurant — the
+  // queued kitchen ticket. These are published by processBatch after commit.
+  emissions.push({
+    companyId,
+    branchId: order.branchId,
+    event: { type: "order.fired", orderId: order.id, branchId: order.branchId },
+  });
+
+  const affectedItemIds = [...new Set(movements.map((m) => m.stockItemId))];
+  if (affectedItemIds.length > 0) {
+    const ledger = await tx
+      .select({
+        stockItemId: tables.stockMovements.stockItemId,
+        qtyDelta: tables.stockMovements.qtyDelta,
+      })
+      .from(tables.stockMovements)
+      .where(
+        and(
+          eq(tables.stockMovements.companyId, companyId),
+          inArray(tables.stockMovements.stockItemId, affectedItemIds),
+        ),
+      );
+    const onHand = computeOnHand(ledger);
+    for (const stockItemId of affectedItemIds) {
+      emissions.push({
+        companyId,
+        branchId: order.branchId,
+        event: {
+          type: "stock.changed",
+          stockItemId,
+          onHand: onHand.get(stockItemId) ?? "0.0000",
+        },
+      });
+    }
+  }
+
+  if (kitchenTicketId) {
+    emissions.push({
+      companyId,
+      branchId: order.branchId,
+      event: {
+        type: "kitchen.ticket.updated",
+        ticketId: kitchenTicketId,
+        status: "queued",
+      },
+    });
+  }
 
   return { clientUuid: e.clientUuid, status: "applied", orderId: order.id };
 }
@@ -301,13 +358,16 @@ export async function processBatch(
       results.push({ clientUuid: event.clientUuid, status: "rejected", reason: "forbidden" });
       continue;
     }
+    // Collected inside the transaction, published only after it commits, so a
+    // rolled-back event never reaches a client (ADR-0006).
+    const emissions: RealtimeMessage[] = [];
     try {
       const result = await withCompany(companyId, async (tx) => {
         switch (event.type) {
           case "order.open":
             return applyOpen(tx, companyId, event);
           case "order.fire":
-            return applyFire(tx, companyId, enabledRestaurant, event);
+            return applyFire(tx, companyId, enabledRestaurant, event, emissions);
           case "order.settle":
             return applySettle(tx, companyId, event);
           case "order.refund":
@@ -315,6 +375,9 @@ export async function processBatch(
         }
       });
       results.push(result);
+      if (result.status === "applied") {
+        for (const message of emissions) realtimeBus.publish(message);
+      }
     } catch (err) {
       results.push({
         clientUuid: event.clientUuid,

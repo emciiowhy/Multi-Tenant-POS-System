@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { tables, withCompany } from "@vendme/db";
 import type { OnHandRow, RecordMovementInput } from "@vendme/contracts";
 import { computeOnHand } from "./inventory.logic.js";
+import { realtimeBus } from "../../realtime/bus.js";
 
 export interface MovementResult {
   status: "applied" | "duplicate";
@@ -16,7 +17,7 @@ export async function recordMovement(
   companyId: string,
   input: RecordMovementInput,
 ): Promise<MovementResult> {
-  return withCompany(companyId, async (tx) => {
+  const outcome = await withCompany(companyId, async (tx) => {
     const inserted = await tx
       .insert(tables.stockMovements)
       .values({
@@ -31,8 +32,40 @@ export async function recordMovement(
         target: [tables.stockMovements.companyId, tables.stockMovements.clientUuid],
       })
       .returning({ id: tables.stockMovements.id });
-    return { status: inserted.length > 0 ? "applied" : "duplicate" };
+    if (inserted.length === 0) return { status: "duplicate" as const };
+
+    // Project the new on-hand for this item from the ledger, in the same
+    // transaction, so the broadcast carries the authoritative value.
+    const rows = await tx
+      .select({
+        stockItemId: tables.stockMovements.stockItemId,
+        qtyDelta: tables.stockMovements.qtyDelta,
+      })
+      .from(tables.stockMovements)
+      .where(
+        and(
+          eq(tables.stockMovements.companyId, companyId),
+          eq(tables.stockMovements.stockItemId, input.stockItemId),
+        ),
+      );
+    const onHand = computeOnHand(rows).get(input.stockItemId) ?? "0.0000";
+    return { status: "applied" as const, onHand };
   });
+
+  // Publish after commit; a replayed (duplicate) movement broadcasts nothing.
+  if (outcome.status === "applied") {
+    realtimeBus.publish({
+      companyId,
+      branchId: input.branchId,
+      event: {
+        type: "stock.changed",
+        stockItemId: input.stockItemId,
+        onHand: outcome.onHand,
+      },
+    });
+  }
+
+  return { status: outcome.status };
 }
 
 /**

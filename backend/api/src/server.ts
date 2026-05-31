@@ -12,6 +12,8 @@ import { catalogRouter } from "./modules/catalog/catalog.routes.js";
 import { inventoryRouter } from "./modules/inventory/inventory.routes.js";
 import { posRouter } from "./modules/pos/pos.routes.js";
 import { shiftRouter } from "./modules/shifts/shift.routes.js";
+import { mountModules } from "./modules/module.js";
+import { restaurantModule } from "./modules/restaurant/restaurant.routes.js";
 
 /**
  * Builds the Express app. The realtime Socket.IO server (ADR-0007) and
@@ -50,6 +52,11 @@ export function createServer(
   v1.use("/inventory", inventoryRouter(revocations));
   v1.use("/pos", posRouter(revocations));
   v1.use("/shifts", shiftRouter(revocations));
+
+  // Pluggable product modules (ADR-0005), each gated per-company. Restaurant is
+  // the first consumer of the module seam.
+  mountModules(v1, [restaurantModule], revocations);
+
   app.use("/v1", v1);
 
   app.use(errorHandler);
