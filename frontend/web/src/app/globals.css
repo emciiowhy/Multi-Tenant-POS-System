@@ -1,9 +1,94 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens (UI/UX modernization, slice 01). Tailwind v4 is CSS-first here —
+ * no tailwind.config.* — so semantic tokens live in this file.
+ *
+ * Two layers:
+ *   1. Runtime semantic variables on :root, remapped from Tailwind's built-in
+ *      palette and switched for dark mode via prefers-color-scheme. Using the
+ *      palette variables (not hand-rolled hex) keeps the values canonical.
+ *   2. `@theme inline` exposes those variables to Tailwind *by reference*, so the
+ *      generated utilities (bg-surface, text-fg, border-border, bg-brand, …)
+ *      follow the runtime values and flip with the theme automatically — no
+ *      `dark:` variant needed on every element.
+ *
+ * Brand is a single token (--brand → emerald): change it here to re-theme.
+ */
+
 :root {
   color-scheme: light dark;
+
+  --surface: var(--color-white);
+  --surface-2: var(--color-neutral-50);
+  --fg: var(--color-neutral-900);
+  --fg-muted: var(--color-neutral-500);
+  --border: var(--color-neutral-200);
+
+  --brand: var(--color-emerald-600);
+  --brand-strong: var(--color-emerald-700);
+  --brand-foreground: var(--color-white);
+
+  --success: var(--color-emerald-600);
+  --success-bg: var(--color-emerald-50);
+  --warning: var(--color-amber-600);
+  --warning-bg: var(--color-amber-50);
+  --danger: var(--color-red-600);
+  --danger-bg: var(--color-red-50);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: var(--color-neutral-900);
+    --surface-2: var(--color-neutral-800);
+    --fg: var(--color-neutral-100);
+    --fg-muted: var(--color-neutral-400);
+    --border: var(--color-neutral-800);
+
+    --brand: var(--color-emerald-500);
+    --brand-strong: var(--color-emerald-400);
+    --brand-foreground: var(--color-neutral-950);
+
+    --success: var(--color-emerald-500);
+    --success-bg: color-mix(in oklab, var(--color-emerald-500) 16%, transparent);
+    --warning: var(--color-amber-400);
+    --warning-bg: color-mix(in oklab, var(--color-amber-400) 16%, transparent);
+    --danger: var(--color-red-500);
+    --danger-bg: color-mix(in oklab, var(--color-red-500) 16%, transparent);
+  }
+}
+
+@theme inline {
+  /* Typography: Inter (next/font) with a system fallback. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Semantic colors → utilities (bg-surface, text-fg, border-border, bg-brand, …). */
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-border: var(--border);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-foreground: var(--brand-foreground);
+
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+
+  /* Shape, elevation, motion. */
+  --radius-card: 0.75rem;
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
 }
 
 body {
-  @apply bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+  font-family: var(--font-sans);
+  @apply bg-surface text-fg antialiased;
 }
