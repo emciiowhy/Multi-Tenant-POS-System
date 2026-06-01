@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import type { RevocationStore } from "@vendme/auth";
 import { verifyAccessToken } from "../lib/jwks.js";
-import { unauthorized } from "../lib/context.js";
+import { forbidden, unauthorized } from "../lib/context.js";
 import { asyncHandler } from "../lib/async-handler.js";
 
 /**
@@ -27,11 +27,13 @@ export function authenticate(revocations: RevocationStore): RequestHandler {
       throw unauthorized("Session revoked");
     }
 
-    // Company-scoped routes require a tenant. An account-scoped onboarding token
-    // (no `company` claim, PRD §2.3) is rejected here — it's only valid on the
-    // account-scoped guard used for company creation.
+    // The token is valid (authenticated) but carries no tenant scope: an
+    // account-scoped onboarding token (no `company` claim, PRD §2.3). Company
+    // creation accepts it via `authenticateAccount`; every other company-scoped
+    // route forbids it — 403 (authenticated, but not authorized for this
+    // resource), not 401.
     if (!claims.company) {
-      throw unauthorized("Token has no active company");
+      throw forbidden("Token has no active company");
     }
 
     req.ctx = {

@@ -43,12 +43,13 @@ describe("authenticate (company-scoped guard)", () => {
     expect(req.ctx).toEqual({ accountId: "acc-1", companyId: "co-1", role: "cashier", sid: "sid-1" });
   });
 
-  it("rejects a company-less onboarding token (company routes require a tenant)", async () => {
+  it("forbids (403) a company-less onboarding token on a company-scoped route", async () => {
     verifyAccessToken.mockResolvedValue(onboardingClaims);
     const { req, next } = run(authenticate(new InMemoryRevocationStore()));
     await flush();
     const err = next.mock.calls[0]?.[0] as { status?: number } | undefined;
-    expect(err?.status).toBe(401);
+    // Authenticated, but lacks tenant scope for this resource → 403, not 401.
+    expect(err?.status).toBe(403);
     expect(req.ctx).toBeUndefined();
   });
 });
