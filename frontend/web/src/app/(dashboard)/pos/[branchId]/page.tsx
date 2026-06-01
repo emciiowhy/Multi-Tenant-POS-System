@@ -6,15 +6,15 @@ import { cartCount, cartSubtotal, moneyEquals } from "@/lib/pos/cart-logic";
 import { useProducts, useReceipt } from "@/lib/pos/queries";
 import {
   dismissSale,
-  retrySync,
   useChargeSale,
   useOutboxEntry,
   useOutboxFailed,
-  useOutboxPending,
 } from "@/lib/pos/use-outbox";
 import type { TenderMethod } from "@/lib/pos/build-sale-batch";
 import { SaleReceipt, type ReceiptState } from "@/components/pos/sale-receipt";
 import { AttentionBanner } from "@/components/pos/attention-banner";
+import { Button } from "@/components/ui/Button";
+import { useActionLock } from "@/components/ui/Interceptors";
 
 const TENDERS: TenderMethod[] = ["cash", "card"];
 
@@ -34,8 +34,10 @@ export default function PosPage({ params }: { params: Promise<{ branchId: string
   const clear = useCart((s) => s.clear);
 
   const { charge, pending } = useChargeSale(branchId);
-  const pendingSync = useOutboxPending();
   const failures = useOutboxFailed();
+  // Shell-wide soft-lock: a subscription lockout freezes checkout with a reason
+  // (slice 07); offline does NOT lock — sales queue and replay (offline-first).
+  const lock = useActionLock();
 
   const [method, setMethod] = useState<TenderMethod>("cash");
   const [last, setLast] = useState<ChargedSale | null>(null);
@@ -74,17 +76,10 @@ export default function PosPage({ params }: { params: Promise<{ branchId: string
   return (
     <main className="grid min-h-screen grid-cols-1 gap-4 bg-neutral-100 p-4 md:grid-cols-[1fr_360px] dark:bg-neutral-950">
       <section>
-        <header className="mb-3 flex items-center justify-between">
+        {/* The per-page pending-sync pill moved to the shared shell OfflineIndicator
+            (slice 07); the queued state now shows once, in the header. */}
+        <header className="mb-3">
           <h1 className="text-xl font-semibold">Register</h1>
-          {pendingSync > 0 && (
-            <button
-              onClick={retrySync}
-              title="Retry sync now"
-              className="rounded-full bg-amber-500/15 px-3 py-1 text-sm font-medium text-amber-600 hover:bg-amber-500/25 dark:text-amber-400"
-            >
-              Pending sync · {pendingSync} · Retry
-            </button>
-          )}
         </header>
 
         <AttentionBanner failures={failures} onDismiss={dismissSale} />
@@ -147,13 +142,16 @@ export default function PosPage({ params }: { params: Promise<{ branchId: string
               </button>
             ))}
           </div>
-          <button
+          <Button
+            variant="primary"
+            fullWidth
+            loading={pending}
+            disabled={items.length === 0}
+            blockedReason={lock.reason}
             onClick={onCharge}
-            disabled={items.length === 0 || pending}
-            className="w-full rounded-md bg-emerald-600 px-4 py-2.5 font-medium text-white disabled:opacity-50"
           >
             {pending ? "Charging…" : `Charge ${subtotal}`}
-          </button>
+          </Button>
         </div>
       </aside>
 

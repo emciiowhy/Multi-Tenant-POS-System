@@ -9,6 +9,7 @@ import { cn } from "@/lib/ui/cn";
 import { Sidebar } from "./Sidebar";
 import { TenantSwitcher } from "@/components/auth/TenantSwitcher";
 import { ProfileMenu } from "@/components/auth/ProfileMenu";
+import { OfflineIndicator, BillingBannerSlot } from "./Interceptors";
 
 /** Identity/permission context resolved by the server layout (plain data — the
  *  client never imports the auth package). */
@@ -86,12 +87,17 @@ export function AppShell({
             <span aria-hidden>☰</span>
           </button>
           <span className="font-semibold md:hidden">VendMe</span>
-          {/* Tenant switcher + profile (slice 06) read the session via useAppSession. */}
+          {/* OfflineIndicator + tenant switcher + profile (slices 06/07) read the
+              session/interceptor contexts. */}
           <div className="ml-auto flex items-center gap-2" data-testid="header-actions">
+            <OfflineIndicator />
             <TenantSwitcher />
             <ProfileMenu />
           </div>
         </header>
+        {/* Reserved billing-banner slot (slice 07): a flow element that pushes the
+            content down rather than overlaying it. */}
+        <BillingBannerSlot />
         {/* A div (not <main>) for now: migrated pages still own their <main>
             landmark; slice 09 reconciles page chrome onto the shell. */}
         <div className="min-w-0 flex-1">{children}</div>

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { resolvePermissions } from "@vendme/auth";
 import { auth } from "@/auth";
 import { AppShell } from "@/components/ui/AppShell";
+import { InterceptorProvider } from "@/components/ui/Interceptors";
 
 /**
  * Dashboard route group layout (UI/UX modernization, slice 05). Wraps the
@@ -22,6 +23,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const permissions = role ? [...resolvePermissions(role)] : [];
 
   return (
-    <AppShell navContext={{ role, permissions, enabledModules: {} }}>{children}</AppShell>
+    // InterceptorProvider (slice 07) wraps the shell so the header indicator, the
+    // banner slot, and page actions share one subscription/connectivity read; it
+    // sits above AppShell (which stays QueryClient-free for its unit tests).
+    <InterceptorProvider>
+      <AppShell navContext={{ role, permissions, enabledModules: {} }}>{children}</AppShell>
+    </InterceptorProvider>
   );
 }
