@@ -3,9 +3,10 @@
 > **Absolute source of truth for resuming this sprint.** Read this first, then
 > the PRD (`./PRD.md`) and the per-slice tickets (`./issues/0*.md`).
 >
-> **Accurate state: Slices 01–07 DONE**, and the active next target is **Slice
-> 08** (landing page). This file reflects reality — verify with `git log --oneline`
-> and the issue tick boxes (below) before trusting any other summary.
+> **Accurate state: Slices 01–08 DONE**, and the active next target is **Slice
+> 09** (migrate existing flows onto primitives + shell — the final slice). This
+> file reflects reality — verify with `git log --oneline` and the issue tick boxes
+> (below) before trusting any other summary.
 
 _Last updated: 2026-06-01._
 
@@ -23,9 +24,9 @@ primitives, a real landing page, and a unified dashboard shell around the
 existing flows (Auth, Company Switching, POS, Inventory, Floor Plans). **No
 backend or business-logic changes.** Sliced into **9 tracer-bullet issues**.
 
-**Verified state: Slices 01–07 are IMPLEMENTED, VERIFIED, GREEN, and COMMITTED.**
-Frontend test suite: **189 passing**. Full workspace typecheck: **clean (8/8
-packages)**. Issues 01–07 tickets fully ticked; 08–09 open.
+**Verified state: Slices 01–08 are IMPLEMENTED, VERIFIED, GREEN, and COMMITTED.**
+Frontend test suite: **200 passing**. Full workspace typecheck: **clean (8/8
+packages)**. Issues 01–08 tickets fully ticked; only 09 open.
 
 | Slice | Title | Status | Commit |
 |-------|-------|--------|--------|
@@ -36,8 +37,8 @@ packages)**. Issues 01–07 tickets fully ticked; 08–09 open.
 | 05 | Dashboard shell — `(dashboard)` route group + responsive sidebar | ✅ DONE | `205b0ac` |
 | 06 | SessionProvider + TenantSwitcher + profile header | ✅ DONE | `76f8858` |
 | 07 | Interceptors in shell (OfflineIndicator + billing-banner slot) | ✅ DONE | `3654a59` |
-| 08 | Landing page | ⏳ **NEXT** | — |
-| 09 | Migrate existing flows onto primitives | ⬜ pending | — |
+| 08 | Landing page | ✅ DONE | `66215ad` |
+| 09 | Migrate existing flows onto primitives | ⏳ **NEXT** | — |
 
 (PRD `952fbcf`; issue breakdown `ffbbbb6`.)
 
@@ -136,28 +137,45 @@ packages)**. Issues 01–07 tickets fully ticked; 08–09 open.
   its per-page pending pill (shared indicator now) and moved checkout onto
   `Button` w/ `blockedReason` from `useActionLock`. Tests 10 (2+8).
 
+- **Slice 08 — Modern SaaS landing page.** Replaced the `/` auth-stub with a
+  shell-free marketing surface on slice-01 tokens + slice-02/03 primitives. Pure
+  `lib/marketing/landing-cta.ts` (`landingCta({status})` → "Get Started" `/login`
+  for visitor/loading, "Go to dashboard" → `DASHBOARD_HOME` when authed;
+  `DASHBOARD_HOME="/billing"` — no `/dashboard` index exists, /billing is the one
+  always-valid non-branch route + renders inside the shell) + `pricing.ts`
+  (`pricingTiers()`: trial/standard-featured/enterprise; `TRIAL_DAYS=14`,
+  configurable `STANDARD_PRICE_DISPLAY`; paid CTAs → `/login`). `components/marketing/`:
+  `LandingCtaButton` (session-aware via `useAppSession`, `buttonClasses` on a
+  `Link`), `LandingHero`, `FeatureGrid` (POS/Shifts/Returns/real-time/multi-branch
+  + upcoming Restaurant; reuses Card/Badge), `PricingMatrix`. `app/page.tsx`
+  composes nav+hero+features+pricing+closing+footer. **Divergence (logged):**
+  ticket said server component + `auth()`; per the live instruction the CTA uses
+  the client `useAppSession` bridge (no `@/auth` import) so it's mockable. Token
+  test asserts no hardcoded hex. Tests 11 (3+4+4).
+
 ---
 
-## 2. IMMEDIATE NEXT TASK — SLICE 08 (active)
+## 2. IMMEDIATE NEXT TASK — SLICE 09 (active, final slice)
 
-**Slice 08 — Modern SaaS landing page.** Ticket: `./issues/08-landing-page.md`.
-Blocked by 02, 03 (both done). Red-green. Replace the `/` auth-stub:
+**Slice 09 — Migrate existing flows onto primitives + shell.** Ticket:
+`./issues/09-migrate-flows-onto-primitives.md`. Blocked by 03, 05, 07 (all done).
+Red-green; **behavior + every existing test must stay green** (this is a refactor).
 
-- Hero + interactive feature grid (offline / real-time sync / multi-branch) +
-  pricing matrix (Free Trial + Standard + Enterprise/Contact; Standard CTA →
-  sign-in → in-app Subscribe). "Get Started" → `/login`; **signed-in users see
-  "Go to dashboard"** (read session via the slice-06 `useAppSession`, which now
-  wraps the whole app via the root `SessionProvider`).
-- Built on the slice 02/03 primitives + tokens. `/` is shell-free (outside the
-  `(dashboard)` group), so no AppShell chrome.
+- Refactor `pos`/`shifts`/`returns`/`restaurant/floor`/`billing`/`login` page
+  chrome + the existing components (`AttentionBanner`, `SaleReceipt`,
+  `CloseShiftResult`, `BillingBanner`) onto the `ui/` primitives + tokens
+  (drop the inline `neutral-*`/`emerald-*`/`amber-*`/`bg-white` literals).
+- **Reconcile page chrome with the shell:** today the shell content region is a
+  `<div>` and each migrated page still renders its own full-screen `<main>`
+  (with `min-h-screen` + its own bg). Slice 09 makes **the shell own the `<main>`
+  landmark** and pages drop their `min-h-screen`/bg wrappers so they flow inside
+  the shell content region. (The POS checkout already moved to `Button` in
+  slice 07 — good prior art; the POS page's `<main className="...bg-neutral-100
+  ...min-h-screen">` is the kind of wrapper to reconcile.)
 
-### ⚠️ Slices 05 + 06 + 07 are DONE — do NOT rebuild them
-- Slice 05 (`205b0ac`): `(dashboard)` route group + responsive sidebar/drawer.
-- Slice 06 (`76f8858`): session bridge + tenant switcher + profile header.
-- Slice 07 (`3654a59`): shell interceptors — header `OfflineIndicator`, reserved
-  `BillingBannerSlot`, and the `useActionLock` soft-lock (checkout freezes on a
-  subscription lockout). `InterceptorProvider` is mounted in the `(dashboard)`
-  layout; `useInterceptors`/`useActionLock` have a safe default outside it.
+### ⚠️ Slices 05–08 are DONE — do NOT rebuild them
+- 05 (`205b0ac`) shell/route-group · 06 (`76f8858`) session+switcher+profile ·
+  07 (`3654a59`) interceptors · 08 (`66215ad`) landing page.
 
 ### Gaps still carried forward (need a backend change → out of sprint scope)
 - **`enabledModules` sourcing** (slice 06). The session bridge *broadcasts* it
@@ -166,6 +184,9 @@ Blocked by 02, 03 (both done). Red-green. Replace the `/` auth-stub:
   roleKey}`. So the shell still resolves `enabledModules: {}` and **restaurant nav
   (Floor/Kitchen) stays hidden in-app** (components + tests support it). Plus the
   **branch picker** for when off a branch route.
+
+**After slice 09 the UI/UX sprint is complete → resume KDS / Order Lifecycle
+([[phase7-restaurant-module]]).**
 
 ---
 
@@ -179,12 +200,11 @@ In order (each red-green; commit per slice; existing tests must stay green):
   the per-page POS pill is gone) + `BillingBanner` (reuse `bannerState`) in a
   **reserved in-flow shell slot** + `Button` `blockedReason` via `useActionLock`
   for the subscription lockout (offline stays non-blocking, offline-first).
-- **Slice 08 — Modern SaaS landing page.** ← active next. Replace the `/` stub: hero, interactive
-  feature grid (offline / real-time sync / multi-branch), pricing matrix (Free
-  Trial + Standard plan + Enterprise/Contact; Standard CTA → sign-in → in-app
-  Subscribe), "Get Started" → `/login`; signed-in users see "Go to dashboard".
-  Built on slice 02/03 primitives. Blocked by 02, 03.
-- **Slice 09 — Migrate existing flows onto primitives + shell.** Refactor
+- **Slice 08 — Modern SaaS landing page** ✅ DONE (`66215ad`). Shell-free `/` on
+  tokens + primitives; session-aware CTA (`landingCta`/`useAppSession`); pure
+  pricing tiers; `DASHBOARD_HOME=/billing`. CTA driven by `useAppSession` (client),
+  a logged divergence from the ticket's "server component + auth()".
+- **Slice 09 — Migrate existing flows onto primitives + shell.** ← active next. Refactor
   `pos`/`shifts`/`returns`/`restaurant/floor`/`billing`/`login` and the existing
   components (`AttentionBanner`, `SaleReceipt`, `CloseShiftResult`,
   `BillingBanner`) onto the `ui/` primitives + tokens; reconcile page chrome with
@@ -226,7 +246,7 @@ lifecycle from there.
   logic `frontend/web/src/lib/ui/` + `frontend/web/src/lib/shell/`; shell layout
   `frontend/web/src/app/(dashboard)/layout.tsx`; tokens
   `frontend/web/src/app/globals.css`.
-- **Verify a resume with:** `cd frontend/web && npx vitest run` (expect 189+
+- **Verify a resume with:** `cd frontend/web && npx vitest run` (expect 200+
   passing) and `pnpm -w turbo run typecheck` (expect 8/8). If typecheck trips on
   `.next/types/validator.ts` referencing old paths, delete the stale `.next/`
   cache (gitignored) and re-run.
