@@ -7,6 +7,8 @@ import { branchIdFromPath } from "@/lib/shell/branch-path";
 import { useSidebarStore } from "@/lib/shell/sidebar-store";
 import { cn } from "@/lib/ui/cn";
 import { Sidebar } from "./Sidebar";
+import { TenantSwitcher } from "@/components/auth/TenantSwitcher";
+import { ProfileMenu } from "@/components/auth/ProfileMenu";
 
 /** Identity/permission context resolved by the server layout (plain data — the
  *  client never imports the auth package). */
@@ -84,8 +86,11 @@ export function AppShell({
             <span aria-hidden>☰</span>
           </button>
           <span className="font-semibold md:hidden">VendMe</span>
-          {/* Tenant switcher + profile mount here in slice 06. */}
-          <div className="ml-auto flex items-center gap-2" data-testid="header-actions" />
+          {/* Tenant switcher + profile (slice 06) read the session via useAppSession. */}
+          <div className="ml-auto flex items-center gap-2" data-testid="header-actions">
+            <TenantSwitcher />
+            <ProfileMenu />
+          </div>
         </header>
         {/* A div (not <main>) for now: migrated pages still own their <main>
             landmark; slice 09 reconciles page chrome onto the shell. */}

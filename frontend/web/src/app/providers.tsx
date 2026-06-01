@@ -7,6 +7,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { getReplayEngine } from "@/lib/pos/replay";
 import { createIdbStorage } from "@/lib/query/idb-storage";
 import { BillingChrome } from "@/components/billing/billing-chrome";
+import { SessionProvider } from "@/components/auth/SessionProvider";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -43,13 +44,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister, maxAge: DAY_MS }}
-    >
-      {/* App-shell billing: 402→/billing redirect + trial/past-due banner (ADR-0005). */}
-      <BillingChrome />
-      {children}
-    </PersistQueryClientProvider>
+    // SessionProvider (slice 06) is outermost so the whole tree — landing, login,
+    // and the dashboard shell — can read/update the session via useAppSession.
+    <SessionProvider>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister, maxAge: DAY_MS }}
+      >
+        {/* App-shell billing: 402→/billing redirect + trial/past-due banner (ADR-0005). */}
+        <BillingChrome />
+        {children}
+      </PersistQueryClientProvider>
+    </SessionProvider>
   );
 }
