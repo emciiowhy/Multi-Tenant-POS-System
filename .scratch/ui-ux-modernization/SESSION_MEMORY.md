@@ -3,12 +3,9 @@
 > **Absolute source of truth for resuming this sprint.** Read this first, then
 > the PRD (`./PRD.md`) and the per-slice tickets (`./issues/0*.md`).
 >
-> **⚠️ Status correction vs. the request that created this file:** the request
-> assumed Slices 01–04 were done and Slice 05 was pending. In fact **Slice 05 is
-> also complete and committed** (`205b0ac`). The accurate state is **Slices 01–05
-> DONE**, and the active next target is **Slice 06**. This file reflects reality —
-> verify with `git log --oneline` and the issue tick boxes (below) before trusting
-> any other summary.
+> **Accurate state: Slices 01–06 DONE**, and the active next target is **Slice
+> 07**. This file reflects reality — verify with `git log --oneline` and the issue
+> tick boxes (below) before trusting any other summary.
 
 _Last updated: 2026-06-01._
 
@@ -26,9 +23,9 @@ primitives, a real landing page, and a unified dashboard shell around the
 existing flows (Auth, Company Switching, POS, Inventory, Floor Plans). **No
 backend or business-logic changes.** Sliced into **9 tracer-bullet issues**.
 
-**Verified state: Slices 01–05 are IMPLEMENTED, VERIFIED, GREEN, and COMMITTED.**
-Frontend test suite: **153 passing**. Full workspace typecheck: **clean (8/8
-packages)**. Issues 01–05 tickets fully ticked; 06–09 open.
+**Verified state: Slices 01–06 are IMPLEMENTED, VERIFIED, GREEN, and COMMITTED.**
+Frontend test suite: **179 passing**. Full workspace typecheck: **clean (8/8
+packages)**. Issues 01–06 tickets fully ticked; 07–09 open.
 
 | Slice | Title | Status | Commit |
 |-------|-------|--------|--------|
@@ -37,8 +34,8 @@ packages)**. Issues 01–05 tickets fully ticked; 06–09 open.
 | 03 | Input / Badge / Card / DataGridCard / Skeleton | ✅ DONE | `7657a7e` |
 | 04 | Shell pure-core (`navItemsFor` / `isActiveNav` / `offlineIndicatorState`) | ✅ DONE | `27a4731` |
 | 05 | Dashboard shell — `(dashboard)` route group + responsive sidebar | ✅ DONE | `205b0ac` |
-| 06 | SessionProvider + TenantSwitcher + profile header | ⏳ **NEXT** | — |
-| 07 | Interceptors in shell (OfflineIndicator + billing-banner slot) | ⬜ pending | — |
+| 06 | SessionProvider + TenantSwitcher + profile header | ✅ DONE | `76f8858` |
+| 07 | Interceptors in shell (OfflineIndicator + billing-banner slot) | ⏳ **NEXT** | — |
 | 08 | Landing page | ⬜ pending | — |
 | 09 | Migrate existing flows onto primitives | ⬜ pending | — |
 
@@ -103,40 +100,53 @@ packages)**. Issues 01–05 tickets fully ticked; 06–09 open.
   persisted `useSidebarStore` Zustand, SSR-safe). New pure helper
   `lib/shell/branch-path.ts` (`branchIdFromPath`).
 
+- **Slice 06 — `SessionProvider` + `TenantSwitcher` + profile header.** A
+  **session bridge** over NextAuth so the header components never import
+  `next-auth/react` directly (one seam, trivially testable). Pure
+  `lib/auth/session-view.ts` (`initialsFor` + `buildSessionView` → a total
+  view-model: `status`, `account{id,name,email,imageUrl,initials}`,
+  `activeCompany`, `companies[]`, `enabledModules`). `components/auth/`:
+  `SessionProvider` (wraps NextAuth's `SessionProvider`, exposes `useAppSession()`
+  = view-model + `switchCompany(id)` [`update({activeCompanyId})` → `router.refresh()`
+  so the server `(dashboard)` layout re-resolves role/perms] + `signOut()`; safe
+  loading default outside a provider so unrelated shell tests stay green),
+  `TenantSwitcher` (listbox of memberships, active flagged, select → switch;
+  loading→skeleton, none→null), `ProfileMenu` (avatar image-else-initials + menu
+  with account/active company/sign out). Wired into `app/providers.tsx`
+  (outermost) + mounted in the AppShell `header-actions` slot. Switch re-mints via
+  the NextAuth `jwt` callback + the unchanged `/api/access-token` route. Tests 26
+  (11+4+6+5).
+
 ---
 
-## 2. IMMEDIATE NEXT TASK — SLICE 06 (active)
+## 2. IMMEDIATE NEXT TASK — SLICE 07 (active)
 
-**Slice 06 — `SessionProvider` + `TenantSwitcher` + profile header.**
-Ticket: `./issues/06-session-provider-and-tenant-switcher.md`. Blocked by 05 (now
-unblocked). Red-green.
+**Slice 07 — Interceptors in shell.** Ticket: `./issues/07-interceptors-in-shell.md`.
+Blocked by 05 (+ 02), now unblocked. Red-green. Build on the slice-06 shell:
 
-Requirements:
-- **Add `SessionProvider`** to `app/providers.tsx` (currently absent) so client
-  components can read/update the session via `useSession`.
-- **`TenantSwitcher`** — a header dropdown listing `session.memberships`, marking
-  the active company; selecting one calls `useSession().update({ activeCompanyId
-  })` (the existing `app/actions/switch-company.ts` action) to re-mint the access
-  token (ADR-0001/0004) carrying the new `company` claim.
-- **Profile menu** — active company name + account + sign out.
-- **Mount point:** the `AppShell` header already exposes an empty
-  `data-testid="header-actions"` slot for the switcher + profile.
-- Tests (jsdom): `TenantSwitcher` lists memberships, marks active, invokes the
-  switch on select (mock `useSession` / the action).
+- **`OfflineIndicator`** in the header, driven by `offlineIndicatorState`
+  (slice 04) fed from `onlineManager` + the outbox `pendingCount`; unifies the
+  per-page POS pending pill.
+- **Billing banner slot** — move `BillingBanner` (ADR-0012, reuse `bannerState`)
+  into a **shell banner slot that reserves layout space** (never overlays).
+- **`Button` `blockedReason`** (slice 02 soft-lock contract) wired to the
+  subscription-lockout / offline-pause states.
 
-**Close these Slice-05 gaps in 06 (or note them forward):** the shell currently
-passes `enabledModules: {}` (so **restaurant nav items — Floor/Kitchen — are
-hidden in-app**, though the components + tests support them) and has **no branch
-picker** for when the user isn't on a branch route. Slice 06's session/tenant
-work is the natural place to source the active company's `enabledModules` and an
-active branch and thread them into the shell's nav context.
+### ⚠️ Slices 05 + 06 are DONE — do NOT rebuild them
+- Slice 05 (`205b0ac`): `(dashboard)` route group, collapsible desktop sidebar +
+  mobile drawer, active-link highlighting, pages routed under the group.
+- Slice 06 (`76f8858`): the session bridge + tenant switcher + profile header
+  (see the slice-06 bullet above). The header `header-actions` slot is now filled.
 
-### ⚠️ Slice 05 is DONE — do NOT rebuild it
-For reference, Slice 05's requirements (all satisfied by `205b0ac`): set up the
-Next.js `(dashboard)` route group layout, the desktop collapsible sidebar and
-mobile overlay drawer, active-link highlighting via `isActiveNav`, and safely
-routing the existing pages under the group without breaking flows. If resuming,
-**start at Slice 06**, not 05.
+### Gaps carried forward from slice 06 (need a backend change → out of scope)
+- **`enabledModules` sourcing.** The bridge *broadcasts* `enabledModules` (prop,
+  default `{}`, tested), but real per-company flags aren't reachable on the client
+  — `listAccountMemberships` returns only `{companyId, companyName, companySlug,
+  roleKey}`. Threading real flags needs the backend auth service + the NextAuth
+  `Membership` type to carry `enabledModules` (forbidden by the no-backend-changes
+  rule), so the shell still resolves `enabledModules: {}` and **restaurant nav
+  (Floor/Kitchen) stays hidden in-app** (components + tests already support it).
+- **Branch picker** for when the user isn't on a branch route — still deferred.
 
 ---
 
@@ -144,8 +154,8 @@ routing the existing pages under the group without breaking flows. If resuming,
 
 In order (each red-green; commit per slice; existing tests must stay green):
 
-- **Slice 06 — SessionProvider / TenantSwitcher / profile header** ← active next.
-- **Slice 07 — Interceptors in shell.** `OfflineIndicator` (header, driven by
+- **Slice 06 — SessionProvider / TenantSwitcher / profile header** ✅ DONE (`76f8858`).
+- **Slice 07 — Interceptors in shell.** ← active next. `OfflineIndicator` (header, driven by
   `offlineIndicatorState` from `onlineManager` + outbox `pendingCount`; unifies
   the per-page POS pending pill) + move `BillingBanner` (ADR-0012, reuse
   `bannerState`) into a **shell banner slot that reserves layout space** (never
@@ -198,7 +208,7 @@ lifecycle from there.
   logic `frontend/web/src/lib/ui/` + `frontend/web/src/lib/shell/`; shell layout
   `frontend/web/src/app/(dashboard)/layout.tsx`; tokens
   `frontend/web/src/app/globals.css`.
-- **Verify a resume with:** `cd frontend/web && npx vitest run` (expect 153+
+- **Verify a resume with:** `cd frontend/web && npx vitest run` (expect 179+
   passing) and `pnpm -w turbo run typecheck` (expect 8/8). If typecheck trips on
   `.next/types/validator.ts` referencing old paths, delete the stale `.next/`
   cache (gitignored) and re-run.
