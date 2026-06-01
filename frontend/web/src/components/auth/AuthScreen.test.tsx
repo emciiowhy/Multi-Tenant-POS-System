@@ -16,6 +16,7 @@ vi.mock("./SessionProvider", () => ({ useAppSession: () => session }));
 // Child forms are exercised in their own suites — stub them to markers here.
 vi.mock("./SignInForm", () => ({ SignInForm: () => <div data-testid="signin-form" /> }));
 vi.mock("./SignUpForm", () => ({ SignUpForm: () => <div data-testid="signup-form" /> }));
+vi.mock("./OnboardingForm", () => ({ OnboardingForm: () => <div data-testid="onboarding-form" /> }));
 
 import { AuthScreen } from "./AuthScreen";
 import { useAuthFlowStore } from "@/lib/auth/auth-flow-store";
@@ -27,6 +28,7 @@ const base: AppSession = {
   companies: [],
   enabledModules: {},
   switchCompany: vi.fn(),
+  addCompany: vi.fn(),
   signOut: vi.fn(),
 };
 const company = { id: "c1", name: "Acme", slug: "acme", role: "company_owner", isActive: true };
@@ -69,7 +71,7 @@ describe("AuthScreen", () => {
   it("routes an authenticated account with no tenant into onboarding (no redirect)", () => {
     session = { ...base, status: "authenticated", account: { id: "a", name: "Jane", email: null, imageUrl: null, initials: "J" }, companies: [] };
     render(<AuthScreen />);
-    expect(screen.getByTestId("onboarding-stub")).toBeTruthy();
+    expect(screen.getByTestId("onboarding-form")).toBeTruthy();
     expect(replace).not.toHaveBeenCalled();
   });
 });

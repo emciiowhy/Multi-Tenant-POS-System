@@ -41,6 +41,18 @@ function Probe() {
       <span data-testid="restaurant">{String(s.enabledModules.restaurant ?? false)}</span>
       <button onClick={() => void s.switchCompany("c1")}>switch</button>
       <button onClick={() => s.signOut()}>logout</button>
+      <button
+        onClick={() =>
+          void s.addCompany({
+            companyId: "c9",
+            companyName: "New Co",
+            companySlug: "new-co",
+            roleKey: "company_owner",
+          })
+        }
+      >
+        addco
+      </button>
     </div>
   );
 }
@@ -82,6 +94,26 @@ describe("SessionProvider", () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(updateSpy).toHaveBeenCalledWith({ activeCompanyId: "c1" });
+    expect(refreshSpy).toHaveBeenCalled();
+  });
+
+  it("addCompany folds a freshly-created tenant into the session and refreshes", async () => {
+    render(
+      <SessionProvider>
+        <Probe />
+      </SessionProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "addco" }));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(updateSpy).toHaveBeenCalledWith({
+      newMembership: {
+        companyId: "c9",
+        companyName: "New Co",
+        companySlug: "new-co",
+        roleKey: "company_owner",
+      },
+    });
     expect(refreshSpy).toHaveBeenCalled();
   });
 

@@ -70,10 +70,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.memberships = u.memberships;
         token.activeCompanyId = u.memberships[0]?.companyId ?? null;
       }
-      // Company switch: the switch action calls update({ activeCompanyId }).
-      if (trigger === "update" && session?.activeCompanyId) {
+      // update() triggers: a company switch (`{ activeCompanyId }`) or a freshly
+      // onboarded company (`{ newMembership }`, PRD §2.3) — the new membership
+      // isn't in the login-time snapshot, so fold it in + activate it.
+      if (trigger === "update" && session) {
         const memberships = (token.memberships as Membership[] | undefined) ?? [];
-        if (memberships.some((m) => m.companyId === session.activeCompanyId)) {
+        const newMembership = (session as { newMembership?: Membership }).newMembership;
+        if (newMembership?.companyId) {
+          token.memberships = memberships.some((m) => m.companyId === newMembership.companyId)
+            ? memberships
+            : [...memberships, newMembership];
+          token.activeCompanyId = newMembership.companyId;
+        } else if (
+          session.activeCompanyId &&
+          memberships.some((m) => m.companyId === session.activeCompanyId)
+        ) {
           token.activeCompanyId = session.activeCompanyId;
         }
       }

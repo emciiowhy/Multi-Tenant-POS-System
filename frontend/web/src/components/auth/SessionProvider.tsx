@@ -7,7 +7,7 @@ import {
   useSession,
 } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { buildSessionView, type SessionView } from "@/lib/auth/session-view";
+import { buildSessionView, type RawMembership, type SessionView } from "@/lib/auth/session-view";
 
 /**
  * App-level session bridge (UI/UX modernization, slice 06). Wraps NextAuth's
@@ -26,6 +26,9 @@ import { buildSessionView, type SessionView } from "@/lib/auth/session-view";
  */
 export interface AppSession extends SessionView {
   switchCompany: (companyId: string) => Promise<void>;
+  /** Fold a freshly-created tenant into the session and make it active
+   *  (onboarding, PRD §2.3) — no re-login needed. */
+  addCompany: (membership: RawMembership) => Promise<void>;
   signOut: () => void;
 }
 
@@ -36,6 +39,7 @@ const DEFAULT_APP_SESSION: AppSession = {
   companies: [],
   enabledModules: {},
   switchCompany: async () => {},
+  addCompany: async () => {},
   signOut: () => {},
 };
 
@@ -72,6 +76,10 @@ function AppSessionBridge({
       ...view,
       switchCompany: async (companyId: string) => {
         await update({ activeCompanyId: companyId });
+        router.refresh();
+      },
+      addCompany: async (membership: RawMembership) => {
+        await update({ newMembership: membership });
         router.refresh();
       },
       signOut: () => {

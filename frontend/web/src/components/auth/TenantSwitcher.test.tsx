@@ -22,6 +22,7 @@ const authed: AppSession = {
   companies,
   enabledModules: {},
   switchCompany,
+  addCompany: vi.fn(),
   signOut: vi.fn(),
 };
 

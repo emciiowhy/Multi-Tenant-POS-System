@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAppSession } from "./SessionProvider";
 import { SignInForm } from "./SignInForm";
 import { SignUpForm } from "./SignUpForm";
+import { OnboardingForm } from "./OnboardingForm";
 import { useAuthFlowStore } from "@/lib/auth/auth-flow-store";
 import { authModeFromParam, authModeToParam, type AuthMode } from "@/lib/auth/auth-flow";
 import { needsOnboarding } from "@/lib/auth/post-auth";
 import { DASHBOARD_HOME } from "@/lib/marketing/landing-cta";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
 
 /**
@@ -20,14 +20,11 @@ import { cn } from "@/lib/ui/cn";
  * the Onboarding step. Routing is session-derived: members are sent straight to
  * the dashboard; tenant-less accounts land in onboarding (rather than the 409
  * dead-end). All token-driven + shell-free (lives outside the (dashboard) group).
- *
- * NOTE (slice boundary): the onboarding step is a stub here — its form +
- * provisioning land with the §2.3 backend bootstrap work (held for review).
  */
 export function AuthScreen() {
   const router = useRouter();
   const params = useSearchParams();
-  const { status, companies, account, signOut } = useAppSession();
+  const { status, companies } = useAppSession();
 
   const mode = useAuthFlowStore((s) => s.mode);
   const setMode = useAuthFlowStore((s) => s.setMode);
@@ -75,14 +72,8 @@ export function AuthScreen() {
           <div className="mb-6 text-center text-xl font-bold tracking-tight lg:hidden">VendMe</div>
 
           {mode === "onboarding" ? (
-            <Card data-testid="onboarding-stub" className="flex flex-col gap-4 text-center">
-              <h1 className="text-xl font-semibold text-fg">You&apos;re in — let&apos;s set up your workspace</h1>
-              <p className="text-sm text-fg-muted">
-                Workspace onboarding lands next.{account?.name ? ` Signed in as ${account.name}.` : ""}
-              </p>
-              <Button variant="outline" onClick={() => signOut()}>
-                Sign out
-              </Button>
+            <Card>
+              <OnboardingForm />
             </Card>
           ) : (
             <>
