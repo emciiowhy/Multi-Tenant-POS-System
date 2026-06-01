@@ -31,11 +31,14 @@ export class JwtMinter {
 
   async mint(input: {
     accountId: string;
-    companyId: string;
+    /** Omit for an account-scoped onboarding token (no `company` claim). */
+    companyId?: string;
     role: string;
     sid: string;
   }): Promise<string> {
-    return new SignJWT({ company: input.companyId, role: input.role, sid: input.sid })
+    const payload: JWTPayload = { role: input.role, sid: input.sid };
+    if (input.companyId) payload.company = input.companyId;
+    return new SignJWT(payload)
       .setProtectedHeader({ alg: ALG, kid: this.kid })
       .setSubject(input.accountId)
       .setIssuedAt()

@@ -4,6 +4,7 @@ import { asyncHandler } from "../../lib/async-handler.js";
 import { unauthorized } from "../../lib/context.js";
 import type { RevocationStore } from "@vendme/auth";
 import { authenticate } from "../../middleware/authenticate.js";
+import { authenticateAccount } from "../../middleware/authenticate-account.js";
 import { requirePermission } from "../../middleware/require-permission.js";
 import { listAccountMemberships } from "../auth/auth.service.js";
 import { createCompanyWithOwner, listRegisters } from "./company.service.js";
@@ -17,11 +18,14 @@ const createInput = z.object({
 export function companyRouter(revocations: RevocationStore): Router {
   const router: Router = Router();
   const auth = authenticate(revocations);
+  // Company creation is account-scoped: a tenant-less account must be able to
+  // create its first workspace (PRD §2.3), so it can't require a company claim.
+  const authAccount = authenticateAccount(revocations);
 
   // Create a company. The authenticated account becomes its owner.
   router.post(
     "/",
-    auth,
+    authAccount,
     asyncHandler(async (req, res) => {
       if (!req.ctx) throw unauthorized();
       const body = createInput.parse(req.body);

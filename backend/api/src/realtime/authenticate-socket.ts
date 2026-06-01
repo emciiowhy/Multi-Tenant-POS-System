@@ -43,6 +43,13 @@ export function socketAuth(revocations: RevocationStore) {
       return;
     }
 
+    // Realtime is company-scoped (ADR-0007); a company-less onboarding token
+    // (PRD §2.3) cannot open a socket.
+    if (!claims.company) {
+      next(new Error(SOCKET_AUTH_ERRORS.invalidToken));
+      return;
+    }
+
     socket.data = {
       accountId: claims.sub,
       companyId: claims.company,

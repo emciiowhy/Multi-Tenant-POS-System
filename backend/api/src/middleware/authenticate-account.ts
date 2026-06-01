@@ -5,12 +5,15 @@ import { unauthorized } from "../lib/context.js";
 import { asyncHandler } from "../lib/async-handler.js";
 
 /**
- * Verifies the Bearer access token, checks the sid against the revocation set
- * (ADR-0004), and attaches the company-scoped {@link RequestContext}. Every
- * authenticated request resolves to exactly one `company` claim, which then
- * drives `withCompany()`.
+ * Account-scoped guard for account-level routes (PRD §2.3). Verifies the access
+ * token + revocation exactly like {@link authenticate}, but does NOT require a
+ * `company` claim — so a brand-new, tenant-less account can create its first
+ * company. Accepts both onboarding tokens (no company) and ordinary
+ * company-scoped tokens (an existing member adding another workspace). Mounted
+ * ONLY where account identity alone is sufficient — i.e. `POST /v1/companies`,
+ * whose handler authorizes by `req.ctx.accountId` only.
  */
-export function authenticate(revocations: RevocationStore): RequestHandler {
+export function authenticateAccount(revocations: RevocationStore): RequestHandler {
   return asyncHandler(async (req, _res, next) => {
     const header = req.headers.authorization;
     if (!header?.startsWith("Bearer ")) throw unauthorized("Missing bearer token");
@@ -27,16 +30,11 @@ export function authenticate(revocations: RevocationStore): RequestHandler {
       throw unauthorized("Session revoked");
     }
 
-    // Company-scoped routes require a tenant. An account-scoped onboarding token
-    // (no `company` claim, PRD §2.3) is rejected here — it's only valid on the
-    // account-scoped guard used for company creation.
-    if (!claims.company) {
-      throw unauthorized("Token has no active company");
-    }
-
     req.ctx = {
       accountId: claims.sub,
-      companyId: claims.company,
+      // "" for an onboarding token; the company-creation handler does not read it
+      // (the new company's id scopes its own RLS inserts).
+      companyId: claims.company ?? "",
       role: claims.role,
       sid: claims.sid,
     };

@@ -25,6 +25,20 @@ export async function mintAccessToken(input: {
   return minter.mint(input);
 }
 
+/**
+ * Mints a short-lived ACCOUNT-scoped token (no `company` claim) so a tenant-less
+ * account can create its first company (PRD §2.3). Accepted only by the backend's
+ * `authenticateAccount` guard on `POST /v1/companies`; company-scoped routes
+ * reject it. Same `sid`, so it's revocable alongside the session (ADR-0004).
+ */
+export async function mintOnboardingToken(input: {
+  accountId: string;
+  sid: string;
+}): Promise<string> {
+  const minter = await getMinter();
+  return minter.mint({ accountId: input.accountId, role: "", sid: input.sid });
+}
+
 /** Public JWK set served at /api/auth/jwks for the backend to verify tokens. */
 export async function publicJwks(): Promise<{ keys: Record<string, unknown>[] }> {
   const key = await importSPKI(serverEnv.jwtPublicKey(), "EdDSA");
