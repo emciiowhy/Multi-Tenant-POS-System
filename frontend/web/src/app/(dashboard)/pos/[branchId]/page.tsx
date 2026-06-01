@@ -14,6 +14,7 @@ import type { TenderMethod } from "@/lib/pos/build-sale-batch";
 import { SaleReceipt, type ReceiptState } from "@/components/pos/sale-receipt";
 import { AttentionBanner } from "@/components/pos/attention-banner";
 import { Button } from "@/components/ui/Button";
+import { DataGridCard } from "@/components/ui/DataGridCard";
 import { useActionLock } from "@/components/ui/Interceptors";
 
 const TENDERS: TenderMethod[] = ["cash", "card"];
@@ -74,72 +75,68 @@ export default function PosPage({ params }: { params: Promise<{ branchId: string
   const active = (products ?? []).filter((p) => p.isActive);
 
   return (
-    <main className="grid min-h-screen grid-cols-1 gap-4 bg-neutral-100 p-4 md:grid-cols-[1fr_360px] dark:bg-neutral-950">
+    <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-[1fr_360px]">
       <section>
-        {/* The per-page pending-sync pill moved to the shared shell OfflineIndicator
-            (slice 07); the queued state now shows once, in the header. */}
         <header className="mb-3">
-          <h1 className="text-xl font-semibold">Register</h1>
+          <h1 className="text-xl font-semibold text-fg">Register</h1>
         </header>
 
         <AttentionBanner failures={failures} onDismiss={dismissSale} />
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {active.map((p) => (
-            <button
+            <DataGridCard
               key={p.id}
               onClick={() => add({ productId: p.id, name: p.name, unitPrice: p.price })}
-              className="flex h-24 flex-col justify-between rounded-lg border border-neutral-300 bg-white p-3 text-left shadow-sm hover:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900"
+              className="h-24 justify-between"
             >
-              <span className="font-medium">{p.name}</span>
-              <span className="text-sm text-neutral-500">{p.price}</span>
-            </button>
+              <span className="font-medium text-fg">{p.name}</span>
+              <span className="text-sm text-fg-muted">{p.price}</span>
+            </DataGridCard>
           ))}
           {active.length === 0 && (
-            <p className="text-sm text-neutral-500">No products. Seed some first.</p>
+            <p className="text-sm text-fg-muted">No products. Seed some first.</p>
           )}
         </div>
       </section>
 
-      <aside className="flex flex-col rounded-lg border border-neutral-300 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-neutral-500">
+      <aside className="flex flex-col rounded-card border border-border bg-surface p-4 shadow-card">
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-fg-muted">
           Cart · {cartCount(items)}
         </h2>
         <ul className="flex-1 space-y-2 overflow-auto">
           {items.map((i) => (
             <li key={i.productId} className="flex items-center justify-between gap-2 text-sm">
-              <span className="flex-1 truncate">{i.name}</span>
+              <span className="flex-1 truncate text-fg">{i.name}</span>
               <input
                 type="number"
                 min={0}
                 value={i.quantity}
                 onChange={(e) => setQty(i.productId, Number(e.target.value))}
-                className="w-14 rounded border border-neutral-300 px-1 py-0.5 text-right dark:border-neutral-700 dark:bg-neutral-800"
+                className="w-14 rounded-md border border-border bg-surface px-1 py-0.5 text-right tabular-nums text-fg outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
               />
-              <span className="w-16 text-right tabular-nums">{i.unitPrice}</span>
+              <span className="w-16 text-right tabular-nums text-fg">{i.unitPrice}</span>
             </li>
           ))}
-          {items.length === 0 && <li className="text-sm text-neutral-500">Empty</li>}
+          {items.length === 0 && <li className="text-sm text-fg-muted">Empty</li>}
         </ul>
 
-        <div className="mt-4 border-t border-neutral-200 pt-3 dark:border-neutral-800">
+        <div className="mt-4 border-t border-border pt-3">
           <div className="mb-3 flex items-baseline justify-between">
-            <span className="text-sm text-neutral-500">Subtotal</span>
-            <span className="text-lg font-semibold tabular-nums">{subtotal}</span>
+            <span className="text-sm text-fg-muted">Subtotal</span>
+            <span className="text-lg font-semibold tabular-nums text-fg">{subtotal}</span>
           </div>
           <div className="mb-3 flex gap-2">
             {TENDERS.map((m) => (
-              <button
+              <Button
                 key={m}
+                variant={method === m ? "primary" : "outline"}
+                size="sm"
+                className="flex-1 capitalize"
                 onClick={() => setMethod(m)}
-                className={`flex-1 rounded-md border px-3 py-1.5 text-sm capitalize ${
-                  method === m
-                    ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
-                    : "border-neutral-300 dark:border-neutral-700"
-                }`}
               >
                 {m}
-              </button>
+              </Button>
             ))}
           </div>
           <Button
@@ -169,14 +166,14 @@ export default function PosPage({ params }: { params: Promise<{ branchId: string
           onClose={() => setLast(null)}
         />
       )}
-    </main>
+    </div>
   );
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center p-8 text-neutral-500">
+    <div className="flex min-h-[60vh] items-center justify-center p-8 text-fg-muted">
       {children}
-    </main>
+    </div>
   );
 }

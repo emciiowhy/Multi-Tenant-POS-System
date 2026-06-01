@@ -1,5 +1,9 @@
 "use client";
 
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import type { BadgeVariant } from "@/lib/ui/badge-variant";
+
 export type ReceiptState = "provisional" | "confirmed" | "rejected";
 
 export interface ServerReceipt {
@@ -17,32 +21,31 @@ export interface SaleReceiptProps {
   onClose: () => void;
 }
 
-const PILL: Record<ReceiptState, { label: string; cls: string }> = {
-  provisional: { label: "Pending sync", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-  confirmed: { label: "Synced", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
-  rejected: { label: "Rejected", cls: "bg-red-500/15 text-red-600 dark:text-red-400" },
+const PILL: Record<ReceiptState, { label: string; variant: BadgeVariant }> = {
+  provisional: { label: "Pending sync", variant: "warning" },
+  confirmed: { label: "Synced", variant: "success" },
+  rejected: { label: "Rejected", variant: "danger" },
 };
 
 /**
  * The sale outcome overlay. Provisional (offline, client amount) → Synced
  * (server-authoritative totals) → or Rejected (needs attention). A
  * tendered-vs-server total difference is flagged for reconciliation.
+ * Token-driven + on the shared primitives (slice 09).
  */
 export function SaleReceipt({ state, amount, reason, server, mismatch, onClose }: SaleReceiptProps) {
   const pill = PILL[state];
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-lg bg-white p-5 dark:bg-neutral-900">
+      <div className="w-full max-w-sm rounded-card border border-border bg-surface p-5 shadow-card">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-lg font-semibold">Receipt</h3>
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${pill.cls}`}>
-            {pill.label}
-          </span>
+          <h3 className="text-lg font-semibold text-fg">Receipt</h3>
+          <Badge variant={pill.variant}>{pill.label}</Badge>
         </div>
 
         {state === "confirmed" && server ? (
           <>
-            <ul className="my-3 space-y-1 text-sm">
+            <ul className="my-3 space-y-1 text-sm text-fg">
               {server.lines.map((l) => (
                 <li key={l.id} className="flex justify-between">
                   <span>
@@ -52,33 +55,30 @@ export function SaleReceipt({ state, amount, reason, server, mismatch, onClose }
                 </li>
               ))}
             </ul>
-            <div className="flex justify-between border-t border-neutral-200 pt-2 font-semibold dark:border-neutral-800">
+            <div className="flex justify-between border-t border-border pt-2 font-semibold text-fg">
               <span>Total</span>
               <span className="tabular-nums">{server.grandTotal}</span>
             </div>
             {mismatch && (
-              <p className="mt-2 rounded bg-amber-500/15 p-2 text-xs text-amber-700 dark:text-amber-400">
+              <p className="mt-2 rounded-md bg-warning-bg p-2 text-xs text-warning">
                 Total changed on sync (tendered {amount}) — flagged for reconciliation.
               </p>
             )}
           </>
         ) : state === "rejected" ? (
-          <p className="my-3 rounded bg-red-500/15 p-2 text-sm text-red-700 dark:text-red-400">
+          <p className="my-3 rounded-md bg-danger-bg p-2 text-sm text-danger">
             Needs attention: {reason ?? "sale rejected by the server"}.
           </p>
         ) : (
-          <div className="my-3 flex justify-between font-semibold">
+          <div className="my-3 flex justify-between font-semibold text-fg">
             <span>Charged</span>
             <span className="tabular-nums">{amount}</span>
           </div>
         )}
 
-        <button
-          onClick={onClose}
-          className="mt-4 w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900"
-        >
+        <Button fullWidth onClick={onClose} className="mt-4">
           New sale
-        </button>
+        </Button>
       </div>
     </div>
   );

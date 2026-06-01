@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { openPortal, startCheckout, useSubscription } from "@/lib/billing/queries";
 import { bannerState } from "@/lib/billing/banner-logic";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Skeleton } from "@/components/ui/Skeleton";
+import type { BadgeVariant } from "@/lib/ui/badge-variant";
 
 /**
  * Billing screen (PRD: billing/subscription gate, issue 06). Shows the Company's
  * subscription status + plan and offers Subscribe (Stripe Checkout) and Manage
  * (Stripe portal). Reachable even when the gate has blocked the rest of the app,
- * so a lapsed Company can always pay its way back in.
+ * so a lapsed Company can always pay its way back in. On the shared primitives +
+ * tokens (slice 09).
  */
 export default function BillingPage() {
   const { data, isLoading, isError } = useSubscription();
@@ -29,14 +34,18 @@ export default function BillingPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md p-6">
-      <h1 className="mb-4 text-xl font-semibold">Billing</h1>
+    <div className="mx-auto max-w-md p-6">
+      <h1 className="mb-4 text-xl font-semibold text-fg">Billing</h1>
 
-      <section className="rounded-lg border border-neutral-300 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+      <section className="rounded-card border border-border bg-surface p-5 shadow-card">
         {isLoading ? (
-          <p className="text-sm text-neutral-500">Loading subscription…</p>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-32" />
+          </div>
         ) : isError || !sub ? (
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-fg-muted">
             No active subscription. Subscribe to start using VendMe.
           </p>
         ) : (
@@ -44,46 +53,59 @@ export default function BillingPage() {
         )}
 
         <div className="mt-5 flex gap-2">
-          <button
+          <Button
+            variant="primary"
+            className="flex-1"
             onClick={() => run("checkout")}
             disabled={busy !== null}
-            className="flex-1 rounded-md bg-emerald-600 px-4 py-2.5 font-medium text-white disabled:opacity-50"
+            loading={busy === "checkout"}
           >
             {busy === "checkout" ? "Redirecting…" : "Subscribe"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1"
             onClick={() => run("portal")}
             disabled={busy !== null || !sub?.stripeCustomerId}
-            className="flex-1 rounded-md border border-neutral-300 px-4 py-2.5 font-medium disabled:opacity-50 dark:border-neutral-700"
+            loading={busy === "portal"}
           >
             {busy === "portal" ? "Redirecting…" : "Manage"}
-          </button>
+          </Button>
         </div>
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-danger">{error}</p>}
       </section>
-    </main>
+    </div>
   );
 }
 
 function Status({
   sub,
 }: {
-  sub: { status: string; currentPeriodEnd: string | null; plan: { name: string; priceMonthly: string } | null };
+  sub: {
+    status: string;
+    currentPeriodEnd: string | null;
+    plan: { name: string; priceMonthly: string } | null;
+  };
 }) {
   const state = bannerState(sub, new Date());
   const periodEnd = sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toLocaleDateString() : "—";
-  const label =
+  const { label, variant }: { label: string; variant: BadgeVariant } =
     state.kind === "trial_ending"
-      ? `Trial — ${state.daysLeft} day${state.daysLeft === 1 ? "" : "s"} left`
+      ? { label: `Trial — ${state.daysLeft} day${state.daysLeft === 1 ? "" : "s"} left`, variant: "warning" }
       : state.kind === "trial_expired"
-        ? "Trial ended"
+        ? { label: "Trial ended", variant: "danger" }
         : state.kind === "past_due"
-          ? "Payment past due"
-          : sub.status;
+          ? { label: "Payment past due", variant: "danger" }
+          : { label: sub.status, variant: "neutral" };
 
   return (
     <dl className="space-y-2 text-sm">
-      <Row label="Status" value={label} />
+      <div className="flex items-center justify-between">
+        <dt className="text-fg-muted">Status</dt>
+        <dd>
+          <Badge variant={variant}>{label}</Badge>
+        </dd>
+      </div>
       <Row label="Plan" value={sub.plan ? `${sub.plan.name} ($${sub.plan.priceMonthly}/mo)` : "—"} />
       <Row label="Renews / ends" value={periodEnd} />
     </dl>
@@ -93,8 +115,8 @@ function Status({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-neutral-500">{label}</dt>
-      <dd className="font-medium">{value}</dd>
+      <dt className="text-fg-muted">{label}</dt>
+      <dd className="font-medium text-fg">{value}</dd>
     </div>
   );
 }

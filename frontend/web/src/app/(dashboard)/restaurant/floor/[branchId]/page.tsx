@@ -5,6 +5,9 @@ import type { TableStatus } from "@vendme/contracts";
 import { useFloorPlan, useTransitionTable } from "@/lib/restaurant/queries";
 import { useRealtime } from "@/lib/realtime/use-realtime";
 
+// Floor-plan table states need four distinct hues for an at-a-glance legend —
+// a domain visualization that intentionally sits outside the 4 semantic UI
+// tokens (which have no blue/fuchsia). Kept as a deliberate domain palette.
 const STATUS_COLOR: Record<TableStatus, string> = {
   free: "bg-emerald-600",
   seated: "bg-sky-600",
@@ -37,9 +40,9 @@ export default function FloorPage({ params }: { params: Promise<{ branchId: stri
   ];
 
   return (
-    <main className="min-h-screen bg-neutral-100 p-6 dark:bg-neutral-950">
+    <div className="p-6">
       <header className="mb-6 flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold">Floor plan</h1>
+        <h1 className="text-2xl font-semibold text-fg">Floor plan</h1>
         <Legend />
       </header>
 
@@ -49,13 +52,14 @@ export default function FloorPage({ params }: { params: Promise<{ branchId: stri
           if (tables.length === 0) return null;
           return (
             <section key={section.id ?? "unassigned"}>
-              <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">
+              <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-fg-muted">
                 {section.name}
               </h2>
-              <div className="relative h-80 w-full overflow-hidden rounded-lg border border-neutral-300 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+              <div className="relative h-80 w-full overflow-hidden rounded-card border border-border bg-surface">
                 {tables.map((t) => (
                   <button
                     key={t.id}
+                    type="button"
                     onClick={() =>
                       transition.mutate({ tableId: t.id, status: NEXT_TABLE[t.status] })
                     }
@@ -80,14 +84,14 @@ export default function FloorPage({ params }: { params: Promise<{ branchId: stri
           );
         })}
       </div>
-    </main>
+    </div>
   );
 }
 
 function Legend() {
   const statuses: TableStatus[] = ["free", "seated", "ordered", "bill"];
   return (
-    <div className="flex gap-3 text-xs text-neutral-500">
+    <div className="flex gap-3 text-xs text-fg-muted">
       {statuses.map((s) => (
         <span key={s} className="flex items-center gap-1">
           <span className={`inline-block h-3 w-3 rounded ${STATUS_COLOR[s]}`} /> {s}
@@ -99,8 +103,8 @@ function Legend() {
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center p-8 text-neutral-500">
+    <div className="flex min-h-[60vh] items-center justify-center p-8 text-fg-muted">
       {children}
-    </main>
+    </div>
   );
 }

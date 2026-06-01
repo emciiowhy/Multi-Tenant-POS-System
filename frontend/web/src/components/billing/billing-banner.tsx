@@ -12,7 +12,7 @@ export function BillingBanner({ sub, now }: { sub: BannerSub | null; now?: Date 
   return (
     <div
       role="status"
-      className="flex items-center justify-between gap-3 border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
+      className="flex items-center justify-between gap-3 border-b border-warning/40 bg-warning-bg px-4 py-2 text-sm text-warning"
     >
       <span>{message}</span>
       <a href="/billing" className="shrink-0 font-medium underline underline-offset-2">

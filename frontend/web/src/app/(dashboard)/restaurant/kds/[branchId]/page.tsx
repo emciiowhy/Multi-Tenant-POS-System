@@ -36,7 +36,10 @@ export default function KdsPage({ params }: { params: Promise<{ branchId: string
   const board = tickets ?? [];
 
   return (
-    <main className="min-h-screen bg-neutral-950 p-6 text-neutral-100">
+    // KDS is a deliberately dark, high-contrast kitchen board (not theme-driven);
+    // only the <main> landmark is reconciled into the shell here (slice 09). A
+    // fuller primitive migration waits for the KDS module work to resume.
+    <div className="bg-neutral-950 p-6 text-neutral-100">
       <header className="mb-6 flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold">Kitchen Display</h1>
         <span className="text-sm text-neutral-400">{board.length} active</span>
@@ -82,14 +85,14 @@ export default function KdsPage({ params }: { params: Promise<{ branchId: string
           );
         })}
       </div>
-    </main>
+    </div>
   );
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center p-8 text-neutral-400">
+    <div className="flex min-h-[60vh] items-center justify-center p-8 text-neutral-400">
       {children}
-    </main>
+    </div>
   );
 }

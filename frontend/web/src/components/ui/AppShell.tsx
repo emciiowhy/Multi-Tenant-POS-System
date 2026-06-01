@@ -98,9 +98,9 @@ export function AppShell({
         {/* Reserved billing-banner slot (slice 07): a flow element that pushes the
             content down rather than overlaying it. */}
         <BillingBannerSlot />
-        {/* A div (not <main>) for now: migrated pages still own their <main>
-            landmark; slice 09 reconciles page chrome onto the shell. */}
-        <div className="min-w-0 flex-1">{children}</div>
+        {/* The shell owns the single <main> landmark (slice 09); migrated pages
+            render their content into it without their own <main>/min-h-screen. */}
+        <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
   );

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,34 +30,33 @@ export default function LoginPage() {
     router.push("/");
   }
 
+  // Login is outside the (dashboard) shell group, so it owns its own <main>.
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 p-8">
-      <h1 className="text-2xl font-semibold">Sign in to VendMe</h1>
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder="you@example.com"
-          className="rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-        />
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          placeholder="Password"
-          className="rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-        >
-          {pending ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
+      <h1 className="text-2xl font-semibold text-fg">Sign in to VendMe</h1>
+      <Card>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            required
+            placeholder="you@example.com"
+          />
+          <Input
+            label="Password"
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            placeholder="Password"
+          />
+          {error && <p className="text-sm text-danger">{error}</p>}
+          <Button type="submit" fullWidth loading={pending}>
+            {pending ? "Signing in…" : "Sign in"}
+          </Button>
+        </form>
+      </Card>
     </main>
   );
 }
