@@ -3,10 +3,10 @@
 > **Absolute source of truth for resuming this sprint.** Read this first, then
 > the PRD (`./PRD.md`) and the per-slice tickets (`./issues/0*.md`).
 >
-> **Accurate state: Slices 01–08 DONE**, and the active next target is **Slice
-> 09** (migrate existing flows onto primitives + shell — the final slice). This
-> file reflects reality — verify with `git log --oneline` and the issue tick boxes
-> (below) before trusting any other summary.
+> **🎉 SPRINT COMPLETE: all 9 slices (01–09) DONE, GREEN, and COMMITTED.** The
+> UI/UX Modernization & Responsive Design Sprint is finished. **Next work is the
+> KDS / Order Lifecycle module** (see §4). This file reflects reality — verify with
+> `git log --oneline` and the issue tick boxes (below).
 
 _Last updated: 2026-06-01._
 
@@ -24,9 +24,9 @@ primitives, a real landing page, and a unified dashboard shell around the
 existing flows (Auth, Company Switching, POS, Inventory, Floor Plans). **No
 backend or business-logic changes.** Sliced into **9 tracer-bullet issues**.
 
-**Verified state: Slices 01–08 are IMPLEMENTED, VERIFIED, GREEN, and COMMITTED.**
-Frontend test suite: **200 passing**. Full workspace typecheck: **clean (8/8
-packages)**. Issues 01–08 tickets fully ticked; only 09 open.
+**Verified state: ALL Slices 01–09 are IMPLEMENTED, VERIFIED, GREEN, and
+COMMITTED — the sprint is 100% complete.** Frontend test suite: **200 passing**.
+Full workspace typecheck: **clean (8/8 packages)**. Issues 01–09 all ticked.
 
 | Slice | Title | Status | Commit |
 |-------|-------|--------|--------|
@@ -38,7 +38,7 @@ packages)**. Issues 01–08 tickets fully ticked; only 09 open.
 | 06 | SessionProvider + TenantSwitcher + profile header | ✅ DONE | `76f8858` |
 | 07 | Interceptors in shell (OfflineIndicator + billing-banner slot) | ✅ DONE | `3654a59` |
 | 08 | Landing page | ✅ DONE | `66215ad` |
-| 09 | Migrate existing flows onto primitives | ⏳ **NEXT** | — |
+| 09 | Migrate existing flows onto primitives + shell | ✅ DONE | `f5a70a9` |
 
 (PRD `952fbcf`; issue breakdown `ffbbbb6`.)
 
@@ -153,40 +153,41 @@ packages)**. Issues 01–08 tickets fully ticked; only 09 open.
   the client `useAppSession` bridge (no `@/auth` import) so it's mockable. Token
   test asserts no hardcoded hex. Tests 11 (3+4+4).
 
+- **Slice 09 — Migrate flows + components onto primitives/tokens; shell owns
+  `<main>`.** Final, behavior-preserving refactor. `AppShell`'s content region is
+  now the single `<main>`; every `(dashboard)` page dropped its own `<main>`/
+  `min-h-screen`/page-bg and flows into it (`/login` + `/` stay shell-free with
+  their own `<main>`). Re-skinned the four tested components (`AttentionBanner`,
+  `SaleReceipt` [Badge+Button], `CloseShiftResult` [Button], `BillingBanner`) onto
+  tokens — tests stayed green. Flow pages onto primitives: POS (`DataGridCard`,
+  `Button`), Shifts (`Card`/`Input`/`Button`), Returns (`Card`/`Badge`/`Input`/
+  `Button`; removed its leftover pending pill), Billing (`Card`/`Button`/`Badge`/
+  `Skeleton`), Login (`Card`/`Input`/`Button`). **Documented exceptions:** Floor
+  keeps its 4-state table `STATUS_COLOR` domain legend (no blue/fuchsia token); KDS
+  got a landmark-only reconcile (deliberate dark board, out of this issue's
+  flow-page list — travels with the KDS module work). Tests still **200** (refactor,
+  no new tests).
+
 ---
 
-## 2. IMMEDIATE NEXT TASK — SLICE 09 (active, final slice)
+## 2. SPRINT COMPLETE — NO ACTIVE SLICE
 
-**Slice 09 — Migrate existing flows onto primitives + shell.** Ticket:
-`./issues/09-migrate-flows-onto-primitives.md`. Blocked by 03, 05, 07 (all done).
-Red-green; **behavior + every existing test must stay green** (this is a refactor).
+All nine slices are done, green, and committed (see the table above + §4 for what
+comes next). Nothing in this sprint remains open.
 
-- Refactor `pos`/`shifts`/`returns`/`restaurant/floor`/`billing`/`login` page
-  chrome + the existing components (`AttentionBanner`, `SaleReceipt`,
-  `CloseShiftResult`, `BillingBanner`) onto the `ui/` primitives + tokens
-  (drop the inline `neutral-*`/`emerald-*`/`amber-*`/`bg-white` literals).
-- **Reconcile page chrome with the shell:** today the shell content region is a
-  `<div>` and each migrated page still renders its own full-screen `<main>`
-  (with `min-h-screen` + its own bg). Slice 09 makes **the shell own the `<main>`
-  landmark** and pages drop their `min-h-screen`/bg wrappers so they flow inside
-  the shell content region. (The POS checkout already moved to `Button` in
-  slice 07 — good prior art; the POS page's `<main className="...bg-neutral-100
-  ...min-h-screen">` is the kind of wrapper to reconcile.)
-
-### ⚠️ Slices 05–08 are DONE — do NOT rebuild them
-- 05 (`205b0ac`) shell/route-group · 06 (`76f8858`) session+switcher+profile ·
-  07 (`3654a59`) interceptors · 08 (`66215ad`) landing page.
-
-### Gaps still carried forward (need a backend change → out of sprint scope)
-- **`enabledModules` sourcing** (slice 06). The session bridge *broadcasts* it
-  (prop, default `{}`, tested) but real per-company flags aren't on the client —
-  `listAccountMemberships` returns only `{companyId, companyName, companySlug,
-  roleKey}`. So the shell still resolves `enabledModules: {}` and **restaurant nav
-  (Floor/Kitchen) stays hidden in-app** (components + tests support it). Plus the
-  **branch picker** for when off a branch route.
-
-**After slice 09 the UI/UX sprint is complete → resume KDS / Order Lifecycle
-([[phase7-restaurant-module]]).**
+### Gaps deliberately carried forward (need a BACKEND change → were out of this
+### "no-backend-changes" sprint's scope; pick up when convenient)
+- **`enabledModules` sourcing** (slice 06). The session bridge *broadcasts*
+  `enabledModules` (prop, default `{}`, tested) but the real per-company flags
+  aren't reachable on the client — `listAccountMemberships` returns only
+  `{companyId, companyName, companySlug, roleKey}`. So the shell still resolves
+  `enabledModules: {}` and **restaurant nav (Floor/Kitchen) stays hidden in-app**
+  (the components + tests already support it). To fix: have the backend auth
+  service + the NextAuth `Membership` type carry `enabledModules`, then thread it
+  through `SessionProvider` → `AppShell` nav context.
+- **Branch picker** for when the user isn't on a branch route (so branch-scoped nav
+  can resolve a default branch).
+- **KDS full primitive migration** — intentionally deferred to the KDS module work.
 
 ---
 
@@ -204,13 +205,11 @@ In order (each red-green; commit per slice; existing tests must stay green):
   tokens + primitives; session-aware CTA (`landingCta`/`useAppSession`); pure
   pricing tiers; `DASHBOARD_HOME=/billing`. CTA driven by `useAppSession` (client),
   a logged divergence from the ticket's "server component + auth()".
-- **Slice 09 — Migrate existing flows onto primitives + shell.** ← active next. Refactor
-  `pos`/`shifts`/`returns`/`restaurant/floor`/`billing`/`login` and the existing
-  components (`AttentionBanner`, `SaleReceipt`, `CloseShiftResult`,
-  `BillingBanner`) onto the `ui/` primitives + tokens; reconcile page chrome with
-  the shell (drop per-page full-screen `<main>`; the shell content region is
-  currently a `<div>` to avoid nested `<main>` — slice 09 makes the shell own the
-  `<main>` landmark). Behavior + tests stay green. Blocked by 03, 05, 07.
+- **Slice 09 — Migrate existing flows onto primitives + shell** ✅ DONE (`f5a70a9`).
+  Shell now owns the single `<main>`; pages dropped their `<main>`/`min-h-screen`/
+  bg. The four tested components + the pos/shifts/returns/billing/login pages run on
+  `Button`/`Input`/`Card`/`Badge`/`DataGridCard`/`Skeleton` + tokens. Floor keeps
+  its domain table-color legend; KDS got a landmark-only reconcile. Tests stay 200.
 
 ---
 
