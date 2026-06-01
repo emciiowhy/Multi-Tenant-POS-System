@@ -1,0 +1,37 @@
+{
+  // ── Editor state ──────────────────────────────────────────────────────────
+  // Drop stale per-editor view state (cursor / scroll / folding) on reopen.
+  // NOTE: this does NOT stop a moved/deleted file's tab from being *restored* —
+  // VS Code has no per-workspace setting that does. The reliable cure for a
+  // "ghost tab" (e.g. the old src/app/pos/[branchId]/page.tsx that was git-mv'd
+  // into (dashboard)/ in Slice 05) is to close that tab once, then reload the
+  // window. To suppress window/tab restoration globally, set
+  // "window.restoreWindows": "none" in *User* settings — it is application-scoped
+  // and is ignored here in workspace settings.
+  "workbench.editor.restoreViewState": false,
+
+  // ── Keep the TS server + search/watch off generated & vendored trees ────────
+  // The Next.js typegen (.next/types/**) is the usual source of *stale path*
+  // diagnostics after a route move — the actual class of issue behind the ghost
+  // file. Excluding generated trees keeps the editor from indexing dead paths
+  // and speeds the TS server up in this pnpm/turbo monorepo.
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.turbo": true,
+    "**/dist": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/.turbo/**": true,
+    "**/dist/**": true
+  },
+
+  // ── TypeScript: make the editor resolve like the CLI `tsc` ──────────────────
+  // Prefer the workspace TypeScript so in-editor diagnostics match `pnpm exec
+  // tsc --noEmit`. If a file ever shows phantom errors, it's the TS server using
+  // the wrong project — open the folder at frontend/web or run
+  // "TypeScript: Restart TS Server".
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
