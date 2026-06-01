@@ -3,9 +3,9 @@
 > **Absolute source of truth for resuming this sprint.** Read this first, then
 > the PRD (`./PRD.md`) and the per-slice tickets (`./issues/0*.md`).
 >
-> **Accurate state: Slices 01–06 DONE**, and the active next target is **Slice
-> 07**. This file reflects reality — verify with `git log --oneline` and the issue
-> tick boxes (below) before trusting any other summary.
+> **Accurate state: Slices 01–07 DONE**, and the active next target is **Slice
+> 08** (landing page). This file reflects reality — verify with `git log --oneline`
+> and the issue tick boxes (below) before trusting any other summary.
 
 _Last updated: 2026-06-01._
 
@@ -23,9 +23,9 @@ primitives, a real landing page, and a unified dashboard shell around the
 existing flows (Auth, Company Switching, POS, Inventory, Floor Plans). **No
 backend or business-logic changes.** Sliced into **9 tracer-bullet issues**.
 
-**Verified state: Slices 01–06 are IMPLEMENTED, VERIFIED, GREEN, and COMMITTED.**
-Frontend test suite: **179 passing**. Full workspace typecheck: **clean (8/8
-packages)**. Issues 01–06 tickets fully ticked; 07–09 open.
+**Verified state: Slices 01–07 are IMPLEMENTED, VERIFIED, GREEN, and COMMITTED.**
+Frontend test suite: **189 passing**. Full workspace typecheck: **clean (8/8
+packages)**. Issues 01–07 tickets fully ticked; 08–09 open.
 
 | Slice | Title | Status | Commit |
 |-------|-------|--------|--------|
@@ -35,8 +35,8 @@ packages)**. Issues 01–06 tickets fully ticked; 07–09 open.
 | 04 | Shell pure-core (`navItemsFor` / `isActiveNav` / `offlineIndicatorState`) | ✅ DONE | `27a4731` |
 | 05 | Dashboard shell — `(dashboard)` route group + responsive sidebar | ✅ DONE | `205b0ac` |
 | 06 | SessionProvider + TenantSwitcher + profile header | ✅ DONE | `76f8858` |
-| 07 | Interceptors in shell (OfflineIndicator + billing-banner slot) | ⏳ **NEXT** | — |
-| 08 | Landing page | ⬜ pending | — |
+| 07 | Interceptors in shell (OfflineIndicator + billing-banner slot) | ✅ DONE | `3654a59` |
+| 08 | Landing page | ⏳ **NEXT** | — |
 | 09 | Migrate existing flows onto primitives | ⬜ pending | — |
 
 (PRD `952fbcf`; issue breakdown `ffbbbb6`.)
@@ -117,36 +117,55 @@ packages)**. Issues 01–06 tickets fully ticked; 07–09 open.
   the NextAuth `jwt` callback + the unchanged `/api/access-token` route. Tests 26
   (11+4+6+5).
 
+- **Slice 07 — Interceptors in shell (OfflineIndicator + billing slot + action
+  soft-lock).** One shell interceptor context, reusing existing pure logic +
+  the outbox/replay seam. Pure `lib/shell/action-lock.ts` (`resolveActionLock({banner})`
+  → soft-lock for gated actions when the sub is `trial_expired`/`past_due`/`blocked`;
+  `none`/`trial_ending` stay live; **offline does NOT lock** — offline-first).
+  `lib/shell/use-connectivity.ts` (`useOnline()`, thin `onlineManager` seam).
+  `components/ui/Interceptors.tsx`: `InterceptorProvider` does the single
+  subscription read (react-query) + connectivity + `useOutboxPending`, exposing
+  `useInterceptors()`/`useActionLock()` (safe loading default outside a provider
+  → AppShell stays QueryClient-free in tests); `OfflineIndicator` (subtle dot;
+  queued→count + "syncing when online" + Retry via `retrySync`; offline state);
+  `BillingBannerSlot` (reserved in-flow `<div>` reusing `BillingBanner` — pushes
+  content down, never overlays; hidden on `/billing`). Wiring: `InterceptorProvider`
+  wraps `AppShell` in the `(dashboard)` layout (above the QueryClient-free shell);
+  AppShell mounts the indicator in the header + the banner slot above content;
+  `BillingChrome` trimmed to the 402→`/billing` redirect only; POS page dropped
+  its per-page pending pill (shared indicator now) and moved checkout onto
+  `Button` w/ `blockedReason` from `useActionLock`. Tests 10 (2+8).
+
 ---
 
-## 2. IMMEDIATE NEXT TASK — SLICE 07 (active)
+## 2. IMMEDIATE NEXT TASK — SLICE 08 (active)
 
-**Slice 07 — Interceptors in shell.** Ticket: `./issues/07-interceptors-in-shell.md`.
-Blocked by 05 (+ 02), now unblocked. Red-green. Build on the slice-06 shell:
+**Slice 08 — Modern SaaS landing page.** Ticket: `./issues/08-landing-page.md`.
+Blocked by 02, 03 (both done). Red-green. Replace the `/` auth-stub:
 
-- **`OfflineIndicator`** in the header, driven by `offlineIndicatorState`
-  (slice 04) fed from `onlineManager` + the outbox `pendingCount`; unifies the
-  per-page POS pending pill.
-- **Billing banner slot** — move `BillingBanner` (ADR-0012, reuse `bannerState`)
-  into a **shell banner slot that reserves layout space** (never overlays).
-- **`Button` `blockedReason`** (slice 02 soft-lock contract) wired to the
-  subscription-lockout / offline-pause states.
+- Hero + interactive feature grid (offline / real-time sync / multi-branch) +
+  pricing matrix (Free Trial + Standard + Enterprise/Contact; Standard CTA →
+  sign-in → in-app Subscribe). "Get Started" → `/login`; **signed-in users see
+  "Go to dashboard"** (read session via the slice-06 `useAppSession`, which now
+  wraps the whole app via the root `SessionProvider`).
+- Built on the slice 02/03 primitives + tokens. `/` is shell-free (outside the
+  `(dashboard)` group), so no AppShell chrome.
 
-### ⚠️ Slices 05 + 06 are DONE — do NOT rebuild them
-- Slice 05 (`205b0ac`): `(dashboard)` route group, collapsible desktop sidebar +
-  mobile drawer, active-link highlighting, pages routed under the group.
-- Slice 06 (`76f8858`): the session bridge + tenant switcher + profile header
-  (see the slice-06 bullet above). The header `header-actions` slot is now filled.
+### ⚠️ Slices 05 + 06 + 07 are DONE — do NOT rebuild them
+- Slice 05 (`205b0ac`): `(dashboard)` route group + responsive sidebar/drawer.
+- Slice 06 (`76f8858`): session bridge + tenant switcher + profile header.
+- Slice 07 (`3654a59`): shell interceptors — header `OfflineIndicator`, reserved
+  `BillingBannerSlot`, and the `useActionLock` soft-lock (checkout freezes on a
+  subscription lockout). `InterceptorProvider` is mounted in the `(dashboard)`
+  layout; `useInterceptors`/`useActionLock` have a safe default outside it.
 
-### Gaps carried forward from slice 06 (need a backend change → out of scope)
-- **`enabledModules` sourcing.** The bridge *broadcasts* `enabledModules` (prop,
-  default `{}`, tested), but real per-company flags aren't reachable on the client
-  — `listAccountMemberships` returns only `{companyId, companyName, companySlug,
-  roleKey}`. Threading real flags needs the backend auth service + the NextAuth
-  `Membership` type to carry `enabledModules` (forbidden by the no-backend-changes
-  rule), so the shell still resolves `enabledModules: {}` and **restaurant nav
-  (Floor/Kitchen) stays hidden in-app** (components + tests already support it).
-- **Branch picker** for when the user isn't on a branch route — still deferred.
+### Gaps still carried forward (need a backend change → out of sprint scope)
+- **`enabledModules` sourcing** (slice 06). The session bridge *broadcasts* it
+  (prop, default `{}`, tested) but real per-company flags aren't on the client —
+  `listAccountMemberships` returns only `{companyId, companyName, companySlug,
+  roleKey}`. So the shell still resolves `enabledModules: {}` and **restaurant nav
+  (Floor/Kitchen) stays hidden in-app** (components + tests support it). Plus the
+  **branch picker** for when off a branch route.
 
 ---
 
@@ -155,13 +174,12 @@ Blocked by 05 (+ 02), now unblocked. Red-green. Build on the slice-06 shell:
 In order (each red-green; commit per slice; existing tests must stay green):
 
 - **Slice 06 — SessionProvider / TenantSwitcher / profile header** ✅ DONE (`76f8858`).
-- **Slice 07 — Interceptors in shell.** ← active next. `OfflineIndicator` (header, driven by
-  `offlineIndicatorState` from `onlineManager` + outbox `pendingCount`; unifies
-  the per-page POS pending pill) + move `BillingBanner` (ADR-0012, reuse
-  `bannerState`) into a **shell banner slot that reserves layout space** (never
-  overlays) + wire `Button` `blockedReason` for subscription-lockout / offline
-  pauses. Blocked by 05 (+ 02).
-- **Slice 08 — Modern SaaS landing page.** Replace the `/` stub: hero, interactive
+- **Slice 07 — Interceptors in shell** ✅ DONE (`3654a59`). Header `OfflineIndicator`
+  (driven by `offlineIndicatorState` from `useOnline` + outbox `pendingCount`;
+  the per-page POS pill is gone) + `BillingBanner` (reuse `bannerState`) in a
+  **reserved in-flow shell slot** + `Button` `blockedReason` via `useActionLock`
+  for the subscription lockout (offline stays non-blocking, offline-first).
+- **Slice 08 — Modern SaaS landing page.** ← active next. Replace the `/` stub: hero, interactive
   feature grid (offline / real-time sync / multi-branch), pricing matrix (Free
   Trial + Standard plan + Enterprise/Contact; Standard CTA → sign-in → in-app
   Subscribe), "Get Started" → `/login`; signed-in users see "Go to dashboard".
@@ -208,7 +226,7 @@ lifecycle from there.
   logic `frontend/web/src/lib/ui/` + `frontend/web/src/lib/shell/`; shell layout
   `frontend/web/src/app/(dashboard)/layout.tsx`; tokens
   `frontend/web/src/app/globals.css`.
-- **Verify a resume with:** `cd frontend/web && npx vitest run` (expect 179+
+- **Verify a resume with:** `cd frontend/web && npx vitest run` (expect 189+
   passing) and `pnpm -w turbo run typecheck` (expect 8/8). If typecheck trips on
   `.next/types/validator.ts` referencing old paths, delete the stale `.next/`
   cache (gitignored) and re-run.
