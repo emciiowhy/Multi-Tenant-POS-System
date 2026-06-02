@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { signUpSchema, toRegisterPayload } from "@/lib/auth/schemas";
 import { registerAccount } from "@/app/actions/register";
 import { useAuthFlowStore } from "@/lib/auth/auth-flow-store";
+import { useOnline } from "@/lib/shell/use-connectivity";
+
+const OFFLINE_REASON = "You're offline — reconnect to create your account.";
 
 /**
  * Sign-up form (Auth overhaul PRD §1.2). Validates with `signUpSchema`
@@ -18,6 +21,8 @@ import { useAuthFlowStore } from "@/lib/auth/auth-flow-store";
 export function SignUpForm() {
   const setMode = useAuthFlowStore((s) => s.setMode);
   const setPendingEmail = useAuthFlowStore((s) => s.setPendingEmail);
+  const online = useOnline();
+  const offlineReason = online ? null : OFFLINE_REASON;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,6 +43,11 @@ export function SignUpForm() {
     if (pending) return; // double-submit guard
     setFormError(null);
     setEmailTaken(false);
+
+    if (!online) {
+      setFormError(OFFLINE_REASON);
+      return;
+    }
 
     const parsed = signUpSchema.safeParse({
       email,
@@ -130,7 +140,7 @@ export function SignUpForm() {
         </button>
       )}
 
-      <Button type="submit" fullWidth loading={pending}>
+      <Button type="submit" fullWidth loading={pending} blockedReason={offlineReason}>
         {pending ? "Creating account…" : "Create account"}
       </Button>
       <p className="text-center text-sm text-fg-muted">

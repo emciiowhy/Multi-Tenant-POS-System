@@ -21,6 +21,7 @@ vi.mock("./OnboardingForm", () => ({ OnboardingForm: () => <div data-testid="onb
 import { AuthScreen } from "./AuthScreen";
 import { useAuthFlowStore } from "@/lib/auth/auth-flow-store";
 
+const signOut = vi.fn();
 const base: AppSession = {
   status: "unauthenticated",
   account: null,
@@ -29,9 +30,17 @@ const base: AppSession = {
   enabledModules: {},
   switchCompany: vi.fn(),
   addCompany: vi.fn(),
-  signOut: vi.fn(),
+  signOut,
 };
 const company = { id: "c1", name: "Acme", slug: "acme", role: "company_owner", isActive: true };
+const account = { id: "a", name: "Jane", email: null, imageUrl: null, initials: "J" };
+const member: AppSession = {
+  ...base,
+  status: "authenticated",
+  account,
+  companies: [company],
+  activeCompany: company,
+};
 
 beforeEach(() => {
   params = new URLSearchParams();
@@ -40,6 +49,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   replace.mockReset();
+  signOut.mockReset();
   useAuthFlowStore.getState().reset();
 });
 
@@ -62,16 +72,39 @@ describe("AuthScreen", () => {
     expect(screen.getByTestId("signup-form")).toBeTruthy();
   });
 
-  it("redirects an authenticated member straight to the dashboard", () => {
-    session = { ...base, status: "authenticated", account: { id: "a", name: "Jane", email: null, imageUrl: null, initials: "J" }, companies: [company], activeCompany: company };
-    render(<AuthScreen />);
-    expect(replace).toHaveBeenCalledWith("/billing");
-  });
-
   it("routes an authenticated account with no tenant into onboarding (no redirect)", () => {
-    session = { ...base, status: "authenticated", account: { id: "a", name: "Jane", email: null, imageUrl: null, initials: "J" }, companies: [] };
+    session = { ...base, status: "authenticated", account, companies: [] };
     render(<AuthScreen />);
     expect(screen.getByTestId("onboarding-form")).toBeTruthy();
     expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("offers Continue / Switch (no auto-redirect) when a member ARRIVES already signed in", () => {
+    session = member;
+    render(<AuthScreen />);
+    expect(screen.getByTestId("signed-in-panel")).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("redirects to the dashboard after the member signs in DURING this visit", () => {
+    session = { ...base }; // arrives unauthenticated
+    const { rerender } = render(<AuthScreen />);
+    session = member; // signs in this visit
+    rerender(<AuthScreen />);
+    expect(replace).toHaveBeenCalledWith("/billing");
+  });
+
+  it("Continue takes an already-signed-in member to the dashboard", () => {
+    session = member;
+    render(<AuthScreen />);
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    expect(replace).toHaveBeenCalledWith("/billing");
+  });
+
+  it("Switch account signs out", () => {
+    session = member;
+    render(<AuthScreen />);
+    fireEvent.click(screen.getByRole("button", { name: /switch account/i }));
+    expect(signOut).toHaveBeenCalled();
   });
 });

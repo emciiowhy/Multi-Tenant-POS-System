@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { signInSchema } from "@/lib/auth/schemas";
 import { useAuthFlowStore } from "@/lib/auth/auth-flow-store";
+import { useOnline } from "@/lib/shell/use-connectivity";
+
+const OFFLINE_REASON = "You're offline — reconnect to sign in.";
 
 /**
  * Sign-in form (Auth overhaul PRD §1.1). Validates with `signInSchema`, then
@@ -18,6 +21,9 @@ export function SignInForm() {
   const setMode = useAuthFlowStore((s) => s.setMode);
   const pendingEmail = useAuthFlowStore((s) => s.pendingEmail);
 
+  const online = useOnline();
+  const offlineReason = online ? null : OFFLINE_REASON;
+
   const [email, setEmail] = useState(pendingEmail ?? "");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
@@ -28,6 +34,12 @@ export function SignInForm() {
     e.preventDefault();
     if (pending) return; // double-submit guard
     setFormError(null);
+
+    // Auth needs the network — it can't be queued like an offline POS sale.
+    if (!online) {
+      setFormError(OFFLINE_REASON);
+      return;
+    }
 
     const parsed = signInSchema.safeParse({ email, password });
     if (!parsed.success) {
@@ -70,7 +82,7 @@ export function SignInForm() {
         onChange={(e) => setPassword(e.target.value)}
         error={errors.password}
       />
-      <Button type="submit" fullWidth loading={pending}>
+      <Button type="submit" fullWidth loading={pending} blockedReason={offlineReason}>
         {pending ? "Signing in…" : "Sign in"}
       </Button>
       <p className="text-center text-sm text-fg-muted">

@@ -5,6 +5,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 const signIn = vi.fn();
 vi.mock("next-auth/react", () => ({ signIn: (...a: unknown[]) => signIn(...a) }));
 
+let online = true;
+vi.mock("@/lib/shell/use-connectivity", () => ({ useOnline: () => online }));
+
 import { SignInForm } from "./SignInForm";
 import { useAuthFlowStore } from "@/lib/auth/auth-flow-store";
 
@@ -15,6 +18,7 @@ function fill(label: RegExp, value: string) {
 afterEach(() => {
   cleanup();
   signIn.mockReset();
+  online = true;
   useAuthFlowStore.getState().reset();
 });
 
@@ -49,6 +53,17 @@ describe("SignInForm", () => {
     );
     const alert = await screen.findByRole("alert");
     expect(alert.textContent).toMatch(/invalid email or password/i);
+  });
+
+  it("blocks submit while offline (auth can't be queued) and explains why", () => {
+    online = false;
+    render(<SignInForm />);
+    fill(/email/i, "a@b.io");
+    fill(/password/i, "hunter22");
+    const submit = screen.getByRole("button", { name: /^sign in$/i });
+    expect(submit.getAttribute("aria-disabled")).toBe("true");
+    fireEvent.click(submit);
+    expect(signIn).not.toHaveBeenCalled();
   });
 
   it("prefills the email handed over from a duplicate-email sign-up", () => {

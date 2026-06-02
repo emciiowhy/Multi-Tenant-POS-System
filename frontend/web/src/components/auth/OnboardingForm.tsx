@@ -7,6 +7,9 @@ import { INDUSTRIES, onboardSchema, type Industry } from "@/lib/auth/schemas";
 import { slugify } from "@/lib/auth/slugify";
 import { createCompany } from "@/app/actions/create-company";
 import { useAppSession } from "./SessionProvider";
+import { useOnline } from "@/lib/shell/use-connectivity";
+
+const OFFLINE_REASON = "You're offline — reconnect to create your workspace.";
 
 const INDUSTRY_LABELS: Record<Industry, string> = {
   retail: "Retail",
@@ -23,6 +26,8 @@ const INDUSTRY_LABELS: Record<Industry, string> = {
  */
 export function OnboardingForm() {
   const { account, addCompany } = useAppSession();
+  const online = useOnline();
+  const offlineReason = online ? null : OFFLINE_REASON;
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -44,6 +49,11 @@ export function OnboardingForm() {
     e.preventDefault();
     if (pending) return; // double-submit guard
     setFormError(null);
+
+    if (!online) {
+      setFormError(OFFLINE_REASON);
+      return;
+    }
 
     const parsed = onboardSchema.safeParse({ name: name.trim(), slug: effectiveSlug, industry });
     if (!parsed.success) {
@@ -125,7 +135,7 @@ export function OnboardingForm() {
         </select>
       </div>
 
-      <Button type="submit" fullWidth loading={pending}>
+      <Button type="submit" fullWidth loading={pending} blockedReason={offlineReason}>
         {pending ? "Creating workspace…" : "Create workspace"}
       </Button>
     </form>
