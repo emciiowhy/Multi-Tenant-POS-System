@@ -13,14 +13,13 @@ export interface CtaTarget {
 }
 
 /**
- * Where "Go to dashboard" lands. There is no `/dashboard` index route — the
- * authenticated routes are branch-scoped (`/pos/:branch`, …) or `/billing`.
- * `/billing` is the one always-valid, non-branch route and it renders *inside*
- * the dashboard shell, so it reliably drops a returning user into the chrome
- * (from which the sidebar reaches everything). Single constant → trivially
- * repointed if a dedicated dashboard home lands later.
+ * Where "Go to dashboard" (and the post-sign-in redirect) lands: the dashboard
+ * home at `/home`. It renders inside the shell and resolves a branch context —
+ * auto-forwarding to the single branch's register, or showing a branch picker —
+ * so the sidebar always populates. (Previously `/billing`, the only non-branch
+ * route, which is why returning users used to land on the paywall page.)
  */
-export const DASHBOARD_HOME = "/billing";
+export const DASHBOARD_HOME = "/home";
 
 export function landingCta(input: { status: SessionStatus }): CtaTarget {
   if (input.status === "authenticated") {

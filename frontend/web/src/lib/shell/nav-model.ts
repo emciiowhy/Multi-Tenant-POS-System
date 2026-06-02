@@ -36,11 +36,57 @@ interface NavSpec {
 }
 
 const SPECS: NavSpec[] = [
-  { key: "pos", label: "Register", branchScoped: true, permission: "pos:order:create", href: (b) => `/pos/${b}` },
-  { key: "shifts", label: "Shifts", branchScoped: true, permission: "pos:shift:open", href: (b) => `/shifts/${b}` },
-  { key: "returns", label: "Returns", branchScoped: true, permission: "pos:order:refund", href: (b) => `/returns/${b}` },
-  { key: "floor", label: "Floor", branchScoped: true, permission: "restaurant:table:manage", module: "restaurant", href: (b) => `/restaurant/floor/${b}` },
-  { key: "kds", label: "Kitchen", branchScoped: true, permission: "restaurant:kds:operate", module: "restaurant", href: (b) => `/restaurant/kds/${b}` },
+  {
+    key: "pos",
+    label: "Register",
+    branchScoped: true,
+    permission: "pos:order:create",
+    href: (b) => `/pos/${b}`,
+  },
+  {
+    key: "shifts",
+    label: "Shifts",
+    branchScoped: true,
+    permission: "pos:shift:open",
+    href: (b) => `/shifts/${b}`,
+  },
+  {
+    key: "returns",
+    label: "Returns",
+    branchScoped: true,
+    permission: "pos:order:refund",
+    href: (b) => `/returns/${b}`,
+  },
+  {
+    key: "catalog",
+    label: "Catalog",
+    branchScoped: true,
+    permission: "inventory:product:read",
+    href: (b) => `/catalog/${b}`,
+  },
+  {
+    key: "inventory",
+    label: "Inventory",
+    branchScoped: true,
+    permission: "inventory:product:read",
+    href: (b) => `/inventory/${b}`,
+  },
+  {
+    key: "floor",
+    label: "Floor",
+    branchScoped: true,
+    permission: "restaurant:table:manage",
+    module: "restaurant",
+    href: (b) => `/restaurant/floor/${b}`,
+  },
+  {
+    key: "kds",
+    label: "Kitchen",
+    branchScoped: true,
+    permission: "restaurant:kds:operate",
+    module: "restaurant",
+    href: (b) => `/restaurant/kds/${b}`,
+  },
   // Billing is open to any member (read), so it carries no permission gate and is
   // not branch-scoped — it always shows.
   { key: "billing", label: "Billing", branchScoped: false, href: () => "/billing" },

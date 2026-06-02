@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { AppSession } from "./SessionProvider";
+import { DASHBOARD_HOME } from "@/lib/marketing/landing-cta";
 
 const replace = vi.fn();
 let params = new URLSearchParams();
@@ -16,7 +17,9 @@ vi.mock("./SessionProvider", () => ({ useAppSession: () => session }));
 // Child forms are exercised in their own suites — stub them to markers here.
 vi.mock("./SignInForm", () => ({ SignInForm: () => <div data-testid="signin-form" /> }));
 vi.mock("./SignUpForm", () => ({ SignUpForm: () => <div data-testid="signup-form" /> }));
-vi.mock("./OnboardingForm", () => ({ OnboardingForm: () => <div data-testid="onboarding-form" /> }));
+vi.mock("./OnboardingForm", () => ({
+  OnboardingForm: () => <div data-testid="onboarding-form" />,
+}));
 
 import { AuthScreen } from "./AuthScreen";
 import { useAuthFlowStore } from "@/lib/auth/auth-flow-store";
@@ -91,14 +94,14 @@ describe("AuthScreen", () => {
     const { rerender } = render(<AuthScreen />);
     session = member; // signs in this visit
     rerender(<AuthScreen />);
-    expect(replace).toHaveBeenCalledWith("/billing");
+    expect(replace).toHaveBeenCalledWith(DASHBOARD_HOME);
   });
 
   it("Continue takes an already-signed-in member to the dashboard", () => {
     session = member;
     render(<AuthScreen />);
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-    expect(replace).toHaveBeenCalledWith("/billing");
+    expect(replace).toHaveBeenCalledWith(DASHBOARD_HOME);
   });
 
   it("Switch account signs out", () => {

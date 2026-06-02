@@ -8,13 +8,13 @@ describe("navItemsFor", () => {
   it("includes restaurant items only when the module is enabled", () => {
     const withR = navItemsFor(
       { role: "x", enabledModules: { restaurant: true }, branchId: "b1" },
-      allow,
+      allow
     ).map((i) => i.key);
     expect(withR).toContain("floor");
     expect(withR).toContain("kds");
 
     const withoutR = navItemsFor({ role: "x", enabledModules: {}, branchId: "b1" }, allow).map(
-      (i) => i.key,
+      (i) => i.key
     );
     expect(withoutR).not.toContain("floor");
     expect(withoutR).not.toContain("kds");
@@ -23,7 +23,7 @@ describe("navItemsFor", () => {
   it("hides permission-gated items a role can't access; ungated billing always shows", () => {
     const keys = navItemsFor(
       { role: "x", enabledModules: { restaurant: true }, branchId: "b1" },
-      deny,
+      deny
     ).map((i) => i.key);
     expect(keys).toEqual(["billing"]);
   });
@@ -31,7 +31,7 @@ describe("navItemsFor", () => {
   it("omits branch-scoped items when there is no active branch", () => {
     const keys = navItemsFor(
       { role: "x", enabledModules: { restaurant: true }, branchId: null },
-      allow,
+      allow
     ).map((i) => i.key);
     expect(keys).toEqual(["billing"]);
   });
@@ -39,7 +39,7 @@ describe("navItemsFor", () => {
   it("builds branch-scoped hrefs from the active branch, and a static billing href", () => {
     const items = navItemsFor(
       { role: "x", enabledModules: { restaurant: true }, branchId: "b1" },
-      allow,
+      allow
     );
     expect(items.find((i) => i.key === "pos")?.href).toBe("/pos/b1");
     expect(items.find((i) => i.key === "floor")?.href).toBe("/restaurant/floor/b1");
@@ -49,16 +49,25 @@ describe("navItemsFor", () => {
   it("returns items in a stable, declared order", () => {
     const keys = navItemsFor(
       { role: "x", enabledModules: { restaurant: true }, branchId: "b1" },
-      allow,
+      allow
     ).map((i) => i.key);
-    expect(keys).toEqual(["pos", "shifts", "returns", "floor", "kds", "billing"]);
+    expect(keys).toEqual([
+      "pos",
+      "shifts",
+      "returns",
+      "catalog",
+      "inventory",
+      "floor",
+      "kds",
+      "billing",
+    ]);
   });
 
   it("can hide a single item via the permission predicate", () => {
     const noKds: CanFn = (_role, perm) => perm !== "restaurant:kds:operate";
     const keys = navItemsFor(
       { role: "x", enabledModules: { restaurant: true }, branchId: "b1" },
-      noKds,
+      noKds
     ).map((i) => i.key);
     expect(keys).toContain("floor");
     expect(keys).not.toContain("kds");

@@ -1,15 +1,10 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { useCart } from "@/lib/pos/cart-store";
 import { cartCount, cartSubtotal, moneyEquals } from "@/lib/pos/cart-logic";
 import { useProducts, useReceipt } from "@/lib/pos/queries";
-import {
-  dismissSale,
-  useChargeSale,
-  useOutboxEntry,
-  useOutboxFailed,
-} from "@/lib/pos/use-outbox";
+import { dismissSale, useChargeSale, useOutboxEntry, useOutboxFailed } from "@/lib/pos/use-outbox";
 import type { TenderMethod } from "@/lib/pos/build-sale-batch";
 import { SaleReceipt, type ReceiptState } from "@/components/pos/sale-receipt";
 import { AttentionBanner } from "@/components/pos/attention-banner";
@@ -51,15 +46,22 @@ export default function PosPage({ params }: { params: Promise<{ branchId: string
       : entry?.status === "failed"
         ? "rejected"
         : "provisional";
-  const receipt = useReceipt(
-    receiptState === "confirmed" && last ? last.orderClientUuid : null,
-  );
+  const receipt = useReceipt(receiptState === "confirmed" && last ? last.orderClientUuid : null);
   const mismatch =
     receiptState === "confirmed" && receipt.data && last
       ? !moneyEquals(receipt.data.order.grandTotal, last.amount)
       : false;
 
   const subtotal = cartSubtotal(items);
+
+  // Per-product quantity already in the cart, so each tile reflects its own state
+  // (count badge + selected ring) the instant it's tapped. Declared before the
+  // early returns below so the hook order stays stable (rules-of-hooks).
+  const qtyById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const i of items) map.set(i.productId, i.quantity);
+    return map;
+  }, [items]);
 
   async function onCharge() {
     if (items.length === 0) return;
@@ -84,16 +86,28 @@ export default function PosPage({ params }: { params: Promise<{ branchId: string
         <AttentionBanner failures={failures} onDismiss={dismissSale} />
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {active.map((p) => (
-            <DataGridCard
-              key={p.id}
-              onClick={() => add({ productId: p.id, name: p.name, unitPrice: p.price })}
-              className="h-24 justify-between"
-            >
-              <span className="font-medium text-fg">{p.name}</span>
-              <span className="text-sm text-fg-muted">{p.price}</span>
-            </DataGridCard>
-          ))}
+          {active.map((p) => {
+            const inCart = qtyById.get(p.id) ?? 0;
+            return (
+              <DataGridCard
+                key={p.id}
+                selected={inCart > 0}
+                onClick={() => add({ productId: p.id, name: p.name, unitPrice: p.price })}
+                className="relative h-24 justify-between"
+              >
+                {inCart > 0 && (
+                  <span
+                    aria-label={`${inCart} in cart`}
+                    className="absolute right-2 top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-semibold tabular-nums text-brand-foreground"
+                  >
+                    {inCart}
+                  </span>
+                )}
+                <span className="font-medium text-fg">{p.name}</span>
+                <span className="text-sm text-fg-muted">{p.price}</span>
+              </DataGridCard>
+            );
+          })}
           {active.length === 0 && (
             <p className="text-sm text-fg-muted">No products. Seed some first.</p>
           )}
@@ -104,22 +118,30 @@ export default function PosPage({ params }: { params: Promise<{ branchId: string
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-fg-muted">
           Cart · {cartCount(items)}
         </h2>
-        <ul className="flex-1 space-y-2 overflow-auto">
-          {items.map((i) => (
-            <li key={i.productId} className="flex items-center justify-between gap-2 text-sm">
-              <span className="flex-1 truncate text-fg">{i.name}</span>
-              <input
-                type="number"
-                min={0}
-                value={i.quantity}
-                onChange={(e) => setQty(i.productId, Number(e.target.value))}
-                className="w-14 rounded-md border border-border bg-surface px-1 py-0.5 text-right tabular-nums text-fg outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
-              />
-              <span className="w-16 text-right tabular-nums text-fg">{i.unitPrice}</span>
-            </li>
-          ))}
-          {items.length === 0 && <li className="text-sm text-fg-muted">Empty</li>}
-        </ul>
+        {items.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
+            <ShoppingBagIcon className="h-10 w-10 text-fg-muted/50" />
+            <p className="max-w-[14rem] text-sm text-fg-muted">
+              Scan products or tap tiles to build an order
+            </p>
+          </div>
+        ) : (
+          <ul className="flex-1 space-y-2 overflow-auto">
+            {items.map((i) => (
+              <li key={i.productId} className="flex items-center justify-between gap-2 text-sm">
+                <span className="flex-1 truncate text-fg">{i.name}</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={i.quantity}
+                  onChange={(e) => setQty(i.productId, Number(e.target.value))}
+                  className="w-14 rounded-md border border-border bg-surface px-1 py-0.5 text-right tabular-nums text-fg outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+                />
+                <span className="w-16 text-right tabular-nums text-fg">{i.unitPrice}</span>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <div className="mt-4 border-t border-border pt-3">
           <div className="mb-3 flex items-baseline justify-between">
@@ -175,5 +197,25 @@ function Centered({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-[60vh] items-center justify-center p-8 text-fg-muted">
       {children}
     </div>
+  );
+}
+
+/** Inline bag glyph for the empty-cart state (lucide-react isn't a dependency;
+ *  the app uses inline SVGs). Inherits color via `currentColor`. */
+function ShoppingBagIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 7h12l-1 12.2A2 2 0 0 1 15 21H9a2 2 0 0 1-2-1.8L6 7Z" />
+      <path d="M9 7a3 3 0 0 1 6 0" />
+    </svg>
   );
 }

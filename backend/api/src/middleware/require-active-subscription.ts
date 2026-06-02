@@ -17,6 +17,24 @@ function blockCode(reason: AccessReason): string {
 }
 
 /**
+ * QA-ONLY escape hatch for local UI testing. When `QA_BYPASS_BILLING=true`, the
+ * subscription gate is skipped so the dashboard can be exercised without an
+ * active subscription. Defaults to OFF — to restore the paywall for the capstone
+ * defense, simply unset the var (or set it to anything other than "true") and
+ * restart the API. Evaluated once at boot, so the loud warning below fires
+ * exactly when the bypass is live.
+ */
+const BILLING_BYPASS = process.env.QA_BYPASS_BILLING === "true";
+
+if (BILLING_BYPASS) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "⚠️  QA_BYPASS_BILLING=true — the Stripe subscription paywall is DISABLED. " +
+      "This is for local QA only. Unset QA_BYPASS_BILLING before the capstone defense.",
+  );
+}
+
+/**
  * The v1 SaaS subscription gate (ADR-0005). Runs after {@link authenticate}, so
  * the Company is resolved from `req.ctx`; loads that Company's subscription and
  * applies {@link decideAccess}. A blocked Company gets **402 Payment Required**
@@ -33,6 +51,7 @@ export function requireActiveSubscription(
   now: () => Date = () => new Date(),
 ): RequestHandler {
   return asyncHandler(async (req, _res, next) => {
+    if (BILLING_BYPASS) return next();
     if (!req.ctx) throw unauthorized();
     const subscription = await lookup(req.ctx.companyId);
     const decision = decideAccess(subscription, now());

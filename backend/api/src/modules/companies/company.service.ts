@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { db, tables, withCompany } from "@vendme/db";
 import { PERMISSIONS, SYSTEM_ROLES, WILDCARD, resolvePermissions } from "@vendme/auth";
 import { badRequest } from "../../lib/context.js";
@@ -116,6 +116,21 @@ export async function createCompanyWithOwner(input: {
   await ensureTrialSubscription(companyId);
 
   return { id: companyId, name: company!.name, slug, ownerMembershipId };
+}
+
+/** Active branches for the company, powering the dashboard branch picker (RLS-scoped). */
+export async function listBranches(companyId: string) {
+  return withCompany(companyId, async (tx) => {
+    return tx
+      .select({
+        id: tables.branches.id,
+        name: tables.branches.name,
+        timezone: tables.branches.timezone,
+      })
+      .from(tables.branches)
+      .where(and(eq(tables.branches.companyId, companyId), isNull(tables.branches.deletedAt)))
+      .orderBy(asc(tables.branches.name));
+  });
 }
 
 /** Registers in a branch, for picking a till when opening a Shift (RLS-scoped). */

@@ -8,6 +8,8 @@ describe("branchIdFromPath", () => {
     expect(branchIdFromPath("/returns/b3")).toBe("b3");
     expect(branchIdFromPath("/restaurant/floor/b4")).toBe("b4");
     expect(branchIdFromPath("/restaurant/kds/b5")).toBe("b5");
+    expect(branchIdFromPath("/catalog/b6")).toBe("b6");
+    expect(branchIdFromPath("/inventory/b7")).toBe("b7");
   });
 
   it("ignores deeper segments", () => {
