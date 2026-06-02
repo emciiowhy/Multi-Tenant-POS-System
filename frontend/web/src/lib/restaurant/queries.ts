@@ -34,10 +34,10 @@ export function useFloorPlan(branchId: string) {
 export function useTransitionTicket() {
   return useMutation({
     mutationFn: (vars: { ticketId: string; status: KdsStatus }) =>
-      apiFetch<KitchenTicket>(
-        `/v1/restaurant/kds/tickets/${vars.ticketId}/transition`,
-        { method: "POST", body: JSON.stringify({ status: vars.status }) },
-      ),
+      apiFetch<KitchenTicket>(`/v1/restaurant/kds/tickets/${vars.ticketId}/transition`, {
+        method: "POST",
+        body: JSON.stringify({ status: vars.status }),
+      }),
   });
 }
 

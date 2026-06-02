@@ -20,14 +20,20 @@ export interface SidebarProps {
  * a collapse toggle. No hooks — fully prop-driven so it's trivially testable; the
  * AppShell owns the state.
  */
-export function Sidebar({ items, pathname, collapsed, onToggleCollapse, onNavigate }: SidebarProps) {
+export function Sidebar({
+  items,
+  pathname,
+  collapsed,
+  onToggleCollapse,
+  onNavigate,
+}: SidebarProps) {
   return (
     <div
       data-testid="sidebar"
       data-collapsed={collapsed}
       className={cn(
         "flex h-full flex-col border-r border-border bg-surface p-2 transition-[width]",
-        collapsed ? "w-16" : "w-60",
+        collapsed ? "w-16" : "w-60"
       )}
     >
       <div className={cn("flex h-10 items-center px-2", collapsed ? "justify-center" : "")}>
@@ -49,14 +55,14 @@ export function Sidebar({ items, pathname, collapsed, onToggleCollapse, onNaviga
                 active
                   ? "bg-surface-2 font-medium text-fg"
                   : "text-fg-muted hover:bg-surface-2 hover:text-fg",
-                collapsed && "justify-center px-0",
+                collapsed && "justify-center px-0"
               )}
             >
               <span
                 aria-hidden
                 className={cn(
                   "grid size-6 shrink-0 place-items-center rounded text-xs font-semibold uppercase",
-                  active ? "bg-brand text-brand-foreground" : "bg-surface-2",
+                  active ? "bg-brand text-brand-foreground" : "bg-surface-2"
                 )}
               >
                 {item.label[0]}

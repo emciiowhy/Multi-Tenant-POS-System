@@ -38,8 +38,8 @@ export const useActiveShift = create<ActiveShiftState>()(
     {
       name: "vendme-active-shift",
       storage: createJSONStorage(() =>
-        typeof window !== "undefined" ? window.localStorage : serverStorage,
+        typeof window !== "undefined" ? window.localStorage : serverStorage
       ),
-    },
-  ),
+    }
+  )
 );

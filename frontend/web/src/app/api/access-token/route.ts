@@ -15,9 +15,7 @@ export async function GET() {
   if (!session?.accountId) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
-  const active = session.memberships.find(
-    (m) => m.companyId === session.activeCompanyId,
-  );
+  const active = session.memberships.find((m) => m.companyId === session.activeCompanyId);
   if (!active) {
     return NextResponse.json({ error: "no_active_company" }, { status: 409 });
   }

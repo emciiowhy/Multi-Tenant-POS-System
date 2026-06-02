@@ -49,7 +49,7 @@ describe("SignInForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
     expect(signIn).toHaveBeenCalledWith(
       "credentials",
-      expect.objectContaining({ email: "a@b.io", password: "hunter22", redirect: false }),
+      expect.objectContaining({ email: "a@b.io", password: "hunter22", redirect: false })
     );
     const alert = await screen.findByRole("alert");
     expect(alert.textContent).toMatch(/invalid email or password/i);

@@ -24,7 +24,7 @@ export const useCart = create<CartState>((set) => ({
       if (existing) {
         return {
           items: s.items.map((i) =>
-            i.productId === product.productId ? { ...i, quantity: i.quantity + 1 } : i,
+            i.productId === product.productId ? { ...i, quantity: i.quantity + 1 } : i
           ),
         };
       }
@@ -37,7 +37,6 @@ export const useCart = create<CartState>((set) => ({
           ? s.items.filter((i) => i.productId !== productId)
           : s.items.map((i) => (i.productId === productId ? { ...i, quantity } : i)),
     })),
-  remove: (productId) =>
-    set((s) => ({ items: s.items.filter((i) => i.productId !== productId) })),
+  remove: (productId) => set((s) => ({ items: s.items.filter((i) => i.productId !== productId) })),
   clear: () => set({ items: [] }),
 }));

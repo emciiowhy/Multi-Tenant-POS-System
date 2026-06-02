@@ -54,7 +54,11 @@ describe("ReplayEngine", () => {
 
   it("treats duplicate as success (no double-apply)", async () => {
     const outbox = await outboxWith(["a"]);
-    const engine = new ReplayEngine({ outbox, submit: async () => duplicate(), online: fakeOnline(true) });
+    const engine = new ReplayEngine({
+      outbox,
+      submit: async () => duplicate(),
+      online: fakeOnline(true),
+    });
     await engine.flush();
     expect(outbox.all()[0]!.status).toBe("applied");
   });
@@ -70,7 +74,10 @@ describe("ReplayEngine", () => {
     await engine.flush();
 
     expect(submit).toHaveBeenCalledTimes(2);
-    expect(outbox.all().find((e) => e.id === "a")).toMatchObject({ status: "failed", lastError: "forbidden" });
+    expect(outbox.all().find((e) => e.id === "a")).toMatchObject({
+      status: "failed",
+      lastError: "forbidden",
+    });
     expect(outbox.all().find((e) => e.id === "b")!.status).toBe("applied");
   });
 
@@ -128,7 +135,12 @@ describe("ReplayEngine", () => {
     const submit = vi.fn(async () => {
       throw { status: 402 };
     });
-    const engine = new ReplayEngine({ outbox, submit, online: fakeOnline(true), onBillingRequired });
+    const engine = new ReplayEngine({
+      outbox,
+      submit,
+      online: fakeOnline(true),
+      onBillingRequired,
+    });
 
     await engine.flush();
 

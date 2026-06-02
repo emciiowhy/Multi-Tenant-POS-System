@@ -14,8 +14,7 @@ export interface SubscriptionView {
 export function useSubscription(enabled = true) {
   return useQuery({
     queryKey: ["billing", "subscription"],
-    queryFn: () =>
-      apiFetch<{ subscription: SubscriptionView | null }>("/v1/billing/subscription"),
+    queryFn: () => apiFetch<{ subscription: SubscriptionView | null }>("/v1/billing/subscription"),
     staleTime: 60_000,
     retry: false,
     enabled,

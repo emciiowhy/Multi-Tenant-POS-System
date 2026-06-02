@@ -79,7 +79,7 @@ export function SignUpForm() {
       setFormError(
         res.error === "invalid"
           ? "Please check your details and try again."
-          : "Something went wrong. Please try again.",
+          : "Something went wrong. Please try again."
       );
       return;
     }

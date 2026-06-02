@@ -32,10 +32,7 @@ function fromScaled(value: bigint): string {
 
 /** Display subtotal across the cart. */
 export function cartSubtotal(items: CartItem[]): string {
-  const total = items.reduce(
-    (acc, i) => acc + toScaled(i.unitPrice) * BigInt(i.quantity),
-    0n,
-  );
+  const total = items.reduce((acc, i) => acc + toScaled(i.unitPrice) * BigInt(i.quantity), 0n);
   return fromScaled(total);
 }
 

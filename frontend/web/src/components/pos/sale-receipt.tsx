@@ -33,7 +33,14 @@ const PILL: Record<ReceiptState, { label: string; variant: BadgeVariant }> = {
  * tendered-vs-server total difference is flagged for reconciliation.
  * Token-driven + on the shared primitives (slice 09).
  */
-export function SaleReceipt({ state, amount, reason, server, mismatch, onClose }: SaleReceiptProps) {
+export function SaleReceipt({
+  state,
+  amount,
+  reason,
+  server,
+  mismatch,
+  onClose,
+}: SaleReceiptProps) {
   const pill = PILL[state];
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4">

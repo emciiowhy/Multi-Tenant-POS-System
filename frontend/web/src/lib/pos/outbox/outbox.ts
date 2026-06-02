@@ -15,7 +15,7 @@ export class Outbox {
 
   constructor(
     private readonly store: OutboxStore,
-    private readonly now: () => number = Date.now,
+    private readonly now: () => number = Date.now
   ) {
     this.ready = this.hydrate();
   }

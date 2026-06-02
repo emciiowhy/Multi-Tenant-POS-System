@@ -19,7 +19,7 @@ describe("SaleReceipt", () => {
         amount="23.0000"
         server={{ grandTotal: "23.0000", lines: [] }}
         onClose={() => {}}
-      />,
+      />
     );
     expect(screen.getByText(/synced/i)).toBeTruthy();
     expect(screen.getByText("23.0000")).toBeTruthy();
@@ -33,14 +33,14 @@ describe("SaleReceipt", () => {
         server={{ grandTotal: "20.0000", lines: [] }}
         mismatch
         onClose={() => {}}
-      />,
+      />
     );
     expect(screen.getByText(/reconcil/i)).toBeTruthy();
   });
 
   it("surfaces the rejection reason", () => {
     render(
-      <SaleReceipt state="rejected" amount="23.0000" reason="unknown product" onClose={() => {}} />,
+      <SaleReceipt state="rejected" amount="23.0000" reason="unknown product" onClose={() => {}} />
     );
     expect(screen.getByText(/rejected/i)).toBeTruthy();
     expect(screen.getByText(/unknown product/i)).toBeTruthy();

@@ -14,7 +14,7 @@ import { onBillingRequired } from "./billing/billing-redirect";
 function mockFetchOnce(status: number, body: unknown): void {
   vi.stubGlobal(
     "fetch",
-    vi.fn(async () => new Response(JSON.stringify(body), { status })),
+    vi.fn(async () => new Response(JSON.stringify(body), { status }))
   );
 }
 
@@ -42,7 +42,9 @@ describe("apiFetch billing (402) interceptor", () => {
 
   it("defaults the code to subscription_required when the 402 body has none", async () => {
     mockFetchOnce(402, {});
-    await expect(apiFetch("/v1/pos/events")).rejects.toMatchObject({ code: "subscription_required" });
+    await expect(apiFetch("/v1/pos/events")).rejects.toMatchObject({
+      code: "subscription_required",
+    });
   });
 
   it("still throws a plain ApiError (not BillingRequiredError) for other failures", async () => {

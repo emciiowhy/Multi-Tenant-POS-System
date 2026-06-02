@@ -8,10 +8,7 @@ import { LandingCtaButton } from "./LandingCtaButton";
  */
 export function LandingHero() {
   return (
-    <section
-      data-testid="landing-hero"
-      className="border-b border-border bg-surface"
-    >
+    <section data-testid="landing-hero" className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-20 text-center sm:py-28">
         <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-1 text-xs font-medium text-fg-muted">
           Offline-first · Multi-tenant · Real-time
@@ -20,8 +17,8 @@ export function LandingHero() {
           The offline-resilient point of sale for modern retail &amp; restaurants
         </h1>
         <p className="max-w-2xl text-lg text-fg-muted">
-          Sell straight through outages, sync in real time across every branch, and run one
-          tenant or a hundred — VendMe keeps the register running and the books straight.
+          Sell straight through outages, sync in real time across every branch, and run one tenant
+          or a hundred — VendMe keeps the register running and the books straight.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <LandingCtaButton testId="hero-cta" />

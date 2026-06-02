@@ -25,7 +25,7 @@ export function Badge({ variant, status, className, children, ...rest }: BadgePr
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
         VARIANT_CLASS[resolved],
-        className,
+        className
       )}
       {...rest}
     >

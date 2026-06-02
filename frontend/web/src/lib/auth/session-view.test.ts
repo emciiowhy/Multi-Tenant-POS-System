@@ -57,7 +57,7 @@ describe("buildSessionView", () => {
   it("broadcasts the enabledModules it is given", () => {
     const view = buildSessionView(
       { status: "authenticated", session: fullSession },
-      { enabledModules: { restaurant: true } },
+      { enabledModules: { restaurant: true } }
     );
     expect(view.enabledModules).toEqual({ restaurant: true });
   });
@@ -77,11 +77,11 @@ describe("buildSessionView", () => {
 
   it("reports unauthenticated when there is no session / accountId", () => {
     expect(buildSessionView({ status: "unauthenticated", session: null }).status).toBe(
-      "unauthenticated",
+      "unauthenticated"
     );
-    expect(
-      buildSessionView({ status: "authenticated", session: { accountId: null } }).status,
-    ).toBe("unauthenticated");
+    expect(buildSessionView({ status: "authenticated", session: { accountId: null } }).status).toBe(
+      "unauthenticated"
+    );
   });
 
   it("falls back to the email as the display name when no name is set", () => {
@@ -96,7 +96,10 @@ describe("buildSessionView", () => {
   it("exposes the avatar image url when present", () => {
     const view = buildSessionView({
       status: "authenticated",
-      session: { ...fullSession, user: { name: "Jane Doe", email: null, image: "https://x/a.png" } },
+      session: {
+        ...fullSession,
+        user: { name: "Jane Doe", email: null, image: "https://x/a.png" },
+      },
     });
     expect(view.account?.imageUrl).toBe("https://x/a.png");
   });

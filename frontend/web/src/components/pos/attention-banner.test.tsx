@@ -13,7 +13,7 @@ describe("AttentionBanner", () => {
 
   it("lists each rejected sale's reason", () => {
     render(
-      <AttentionBanner failures={[{ id: "a", reason: "unknown product" }]} onDismiss={() => {}} />,
+      <AttentionBanner failures={[{ id: "a", reason: "unknown product" }]} onDismiss={() => {}} />
     );
     expect(screen.getByText(/unknown product/i)).toBeTruthy();
   });

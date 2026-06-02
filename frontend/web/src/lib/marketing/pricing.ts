@@ -41,11 +41,7 @@ export function pricingTiers(): PricingTier[] {
       name: "Free Trial",
       price: "Free",
       blurb: `Full access for ${TRIAL_DAYS} days — no card required.`,
-      features: [
-        `${TRIAL_DAYS}-day full-feature trial`,
-        "Offline-first register",
-        "Single branch",
-      ],
+      features: [`${TRIAL_DAYS}-day full-feature trial`, "Offline-first register", "Single branch"],
       cta: { label: "Start free trial", href: "/login" },
     },
     {

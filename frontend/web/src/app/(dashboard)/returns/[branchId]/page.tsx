@@ -15,9 +15,10 @@ export default function ReturnsPage({ params }: { params: Promise<{ branchId: st
   const { refund, pending } = useRefund();
   const queryClient = useQueryClient();
 
-  const [refunding, setRefunding] = useState<{ orderClientUuid: string; grandTotal: string } | null>(
-    null,
-  );
+  const [refunding, setRefunding] = useState<{
+    orderClientUuid: string;
+    grandTotal: string;
+  } | null>(null);
   const [amount, setAmount] = useState("");
   const [last, setLast] = useState<{ id: string; amount: string } | null>(null);
   const lastEntry = useOutboxEntry(last?.id ?? null);
@@ -140,7 +141,9 @@ function RefundStatus({
         ? `Refund rejected: ${reason ?? "unknown"}`
         : `Refund ${amount} — pending sync`;
   return (
-    <div className={`mb-4 flex items-center justify-between rounded-card border p-3 text-sm ${tone}`}>
+    <div
+      className={`mb-4 flex items-center justify-between rounded-card border p-3 text-sm ${tone}`}
+    >
       <span>{text}</span>
       <button type="button" onClick={onClose} className="text-xs underline">
         dismiss

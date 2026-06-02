@@ -13,9 +13,7 @@ export const metadata: Metadata = {
     "VendMe is a multi-tenant POS + ERP platform: offline-first selling, real-time sync, and multi-branch management.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={inter.variable}>
       <body>

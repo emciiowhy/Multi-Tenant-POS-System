@@ -88,10 +88,15 @@ function Status({
   };
 }) {
   const state = bannerState(sub, new Date());
-  const periodEnd = sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toLocaleDateString() : "—";
+  const periodEnd = sub.currentPeriodEnd
+    ? new Date(sub.currentPeriodEnd).toLocaleDateString()
+    : "—";
   const { label, variant }: { label: string; variant: BadgeVariant } =
     state.kind === "trial_ending"
-      ? { label: `Trial — ${state.daysLeft} day${state.daysLeft === 1 ? "" : "s"} left`, variant: "warning" }
+      ? {
+          label: `Trial — ${state.daysLeft} day${state.daysLeft === 1 ? "" : "s"} left`,
+          variant: "warning",
+        }
       : state.kind === "trial_expired"
         ? { label: "Trial ended", variant: "danger" }
         : state.kind === "past_due"
@@ -106,7 +111,10 @@ function Status({
           <Badge variant={variant}>{label}</Badge>
         </dd>
       </div>
-      <Row label="Plan" value={sub.plan ? `${sub.plan.name} ($${sub.plan.priceMonthly}/mo)` : "—"} />
+      <Row
+        label="Plan"
+        value={sub.plan ? `${sub.plan.name} ($${sub.plan.priceMonthly}/mo)` : "—"}
+      />
       <Row label="Renews / ends" value={periodEnd} />
     </dl>
   );

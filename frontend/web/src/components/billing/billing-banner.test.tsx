@@ -12,7 +12,7 @@ afterEach(cleanup);
 describe("BillingBanner", () => {
   it("renders nothing for an active subscription", () => {
     const { container } = render(
-      <BillingBanner sub={{ status: "active", currentPeriodEnd: inDays(30) }} now={NOW} />,
+      <BillingBanner sub={{ status: "active", currentPeriodEnd: inDays(30) }} now={NOW} />
     );
     expect(container.firstChild).toBeNull();
   });

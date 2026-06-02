@@ -60,10 +60,10 @@ describe("TenantSwitcher", () => {
     const options = screen.getAllByRole("option");
     expect(options).toHaveLength(2);
     expect(screen.getByRole("option", { name: /acme coffee/i }).getAttribute("aria-selected")).toBe(
-      "true",
+      "true"
     );
     expect(screen.getByRole("option", { name: /bean bros/i }).getAttribute("aria-selected")).toBe(
-      "false",
+      "false"
     );
   });
 
@@ -77,7 +77,9 @@ describe("TenantSwitcher", () => {
   it("does not re-switch when the already-active company is chosen", () => {
     render(<TenantSwitcher />);
     fireEvent.click(screen.getByTestId("tenant-switcher-trigger"));
-    fireEvent.click(within(screen.getByRole("option", { name: /acme coffee/i })).getByRole("button"));
+    fireEvent.click(
+      within(screen.getByRole("option", { name: /acme coffee/i })).getByRole("button")
+    );
     expect(switchCompany).not.toHaveBeenCalled();
   });
 });

@@ -40,7 +40,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     type,
     ...rest
   },
-  ref,
+  ref
 ) {
   const inert = isButtonInert({ loading, disabled, blockedReason });
   // Hard states (disabled/loading) use the native attribute; a blockedReason is
@@ -51,7 +51,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       type={type ?? "button"}
-      className={cn(buttonClasses(variant, size, { loading, disabled, blockedReason, fullWidth }), className)}
+      className={cn(
+        buttonClasses(variant, size, { loading, disabled, blockedReason, fullWidth }),
+        className
+      )}
       disabled={hardDisabled}
       aria-disabled={inert || undefined}
       aria-busy={loading || undefined}
@@ -82,7 +85,12 @@ function Spinner() {
       fill="none"
     >
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
-      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+      <path
+        d="M12 2a10 10 0 0 1 10 10"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

@@ -71,7 +71,7 @@ function emptyView(status: SessionStatus, enabledModules: Record<string, boolean
 
 export function buildSessionView(
   input: { status: SessionStatus; session: RawSession | null | undefined },
-  opts: { enabledModules?: Record<string, boolean> } = {},
+  opts: { enabledModules?: Record<string, boolean> } = {}
 ): SessionView {
   const enabledModules = opts.enabledModules ?? {};
 

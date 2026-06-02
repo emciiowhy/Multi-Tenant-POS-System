@@ -56,7 +56,7 @@ describe("toRegisterPayload", () => {
 describe("onboardSchema", () => {
   it("mirrors the backend createInput: name + slug charset + optional industry", () => {
     expect(
-      onboardSchema.safeParse({ name: "Acme", slug: "acme-coffee", industry: "retail" }).success,
+      onboardSchema.safeParse({ name: "Acme", slug: "acme-coffee", industry: "retail" }).success
     ).toBe(true);
     expect(onboardSchema.safeParse({ name: "Acme", slug: "acme-coffee" }).success).toBe(true);
   });
@@ -66,9 +66,9 @@ describe("onboardSchema", () => {
     expect(onboardSchema.safeParse({ name: "Acme", slug: "acme_coffee" }).success).toBe(false);
   });
   it("rejects an unknown industry", () => {
-    expect(onboardSchema.safeParse({ name: "Acme", slug: "acme", industry: "mining" }).success).toBe(
-      false,
-    );
+    expect(
+      onboardSchema.safeParse({ name: "Acme", slug: "acme", industry: "mining" }).success
+    ).toBe(false);
     // the four supported verticals
     expect(INDUSTRIES).toEqual(["retail", "restaurant", "auto_service", "dealership"]);
   });

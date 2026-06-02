@@ -4,7 +4,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 const registerAccount = vi.fn();
 const signIn = vi.fn();
-vi.mock("@/app/actions/register", () => ({ registerAccount: (...a: unknown[]) => registerAccount(...a) }));
+vi.mock("@/app/actions/register", () => ({
+  registerAccount: (...a: unknown[]) => registerAccount(...a),
+}));
 vi.mock("next-auth/react", () => ({ signIn: (...a: unknown[]) => signIn(...a) }));
 
 import { SignUpForm } from "./SignUpForm";
@@ -46,11 +48,11 @@ describe("SignUpForm", () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(registerAccount).toHaveBeenCalledWith(
-      expect.objectContaining({ email: "jane@x.io", password: "hunter22" }),
+      expect.objectContaining({ email: "jane@x.io", password: "hunter22" })
     );
     expect(signIn).toHaveBeenCalledWith(
       "credentials",
-      expect.objectContaining({ email: "jane@x.io", password: "hunter22", redirect: false }),
+      expect.objectContaining({ email: "jane@x.io", password: "hunter22", redirect: false })
     );
   });
 

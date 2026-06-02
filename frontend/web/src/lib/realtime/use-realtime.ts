@@ -38,14 +38,14 @@ export function useRealtime({ branchId, kds = false }: RealtimeOptions): void {
         const current = queryClient.getQueryData<KitchenTicket[]>(key);
         if (current?.some((t) => t.id === event.ticketId)) {
           queryClient.setQueryData<KitchenTicket[]>(key, (old) =>
-            old ? applyKdsEvent(old, event) : old,
+            old ? applyKdsEvent(old, event) : old
           );
         } else {
           void queryClient.invalidateQueries({ queryKey: key });
         }
       } else if (event.type === "table.changed") {
         queryClient.setQueryData<FloorPlan>(["floor", branchId], (plan) =>
-          plan ? applyTableEvent(plan, event) : plan,
+          plan ? applyTableEvent(plan, event) : plan
         );
       }
       // order.fired / stock.changed / shift.* aren't consumed by these screens.
