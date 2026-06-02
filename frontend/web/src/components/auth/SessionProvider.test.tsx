@@ -73,7 +73,7 @@ describe("SessionProvider", () => {
     render(
       <SessionProvider enabledModules={{ restaurant: true }}>
         <Probe />
-      </SessionProvider>,
+      </SessionProvider>
     );
     expect(screen.getByTestId("status").textContent).toBe("authenticated");
     expect(screen.getByTestId("name").textContent).toBe("Jane Doe");
@@ -87,7 +87,7 @@ describe("SessionProvider", () => {
     render(
       <SessionProvider>
         <Probe />
-      </SessionProvider>,
+      </SessionProvider>
     );
     fireEvent.click(screen.getByRole("button", { name: "switch" }));
     // microtask flush so the awaited update resolves before assertions
@@ -101,7 +101,7 @@ describe("SessionProvider", () => {
     render(
       <SessionProvider>
         <Probe />
-      </SessionProvider>,
+      </SessionProvider>
     );
     fireEvent.click(screen.getByRole("button", { name: "addco" }));
     await Promise.resolve();
@@ -121,7 +121,7 @@ describe("SessionProvider", () => {
     render(
       <SessionProvider>
         <Probe />
-      </SessionProvider>,
+      </SessionProvider>
     );
     fireEvent.click(screen.getByRole("button", { name: "logout" }));
     expect(signOutSpy).toHaveBeenCalled();

@@ -25,7 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: { staleTime: 30_000, gcTime: DAY_MS, refetchOnWindowFocus: false },
         },
-      }),
+      })
   );
 
   // Lazy IDB storage (SSR-safe); persister/storage touch IndexedDB only during
@@ -34,7 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     createAsyncStoragePersister({
       storage: createIdbStorage(),
       key: "vendme-pos-query-cache",
-    }),
+    })
   );
 
   useEffect(() => {

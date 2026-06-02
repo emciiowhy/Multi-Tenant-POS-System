@@ -47,7 +47,7 @@ describe("BillingBannerSlot", () => {
       <InterceptorProvider>
         <BillingBannerSlot />
         <div data-testid="page-content">content</div>
-      </InterceptorProvider>,
+      </InterceptorProvider>
     );
 
     const slot = screen.getByTestId("billing-banner-slot");
@@ -67,7 +67,7 @@ describe("BillingBannerSlot", () => {
     render(
       <InterceptorProvider>
         <BillingBannerSlot />
-      </InterceptorProvider>,
+      </InterceptorProvider>
     );
     expect(screen.queryByRole("status")).toBeNull();
   });
@@ -78,7 +78,7 @@ describe("BillingBannerSlot", () => {
     render(
       <InterceptorProvider>
         <BillingBannerSlot />
-      </InterceptorProvider>,
+      </InterceptorProvider>
     );
     expect(screen.queryByRole("status")).toBeNull();
   });
@@ -91,7 +91,7 @@ describe("OfflineIndicator", () => {
     render(
       <InterceptorProvider>
         <OfflineIndicator />
-      </InterceptorProvider>,
+      </InterceptorProvider>
     );
     const ind = screen.getByTestId("offline-indicator");
     expect(ind.getAttribute("data-kind")).toBe("queued");
@@ -108,7 +108,7 @@ describe("OfflineIndicator", () => {
     render(
       <InterceptorProvider>
         <OfflineIndicator />
-      </InterceptorProvider>,
+      </InterceptorProvider>
     );
     expect(screen.getByTestId("offline-indicator").getAttribute("data-kind")).toBe("online");
     expect(screen.queryByRole("button", { name: /retry/i })).toBeNull();
@@ -120,7 +120,7 @@ describe("OfflineIndicator", () => {
     render(
       <InterceptorProvider>
         <OfflineIndicator />
-      </InterceptorProvider>,
+      </InterceptorProvider>
     );
     const ind = screen.getByTestId("offline-indicator");
     expect(ind.getAttribute("data-kind")).toBe("offline");
@@ -145,7 +145,7 @@ describe("useActionLock (state-locking interceptor)", () => {
     render(
       <InterceptorProvider>
         <LockedCharge onClick={onClick} />
-      </InterceptorProvider>,
+      </InterceptorProvider>
     );
     const btn = screen.getByRole("button", { name: /charge/i });
     expect(btn.getAttribute("aria-disabled")).toBe("true");
@@ -162,7 +162,7 @@ describe("useActionLock (state-locking interceptor)", () => {
     render(
       <InterceptorProvider>
         <LockedCharge onClick={onClick} />
-      </InterceptorProvider>,
+      </InterceptorProvider>
     );
     const btn = screen.getByRole("button", { name: /charge/i });
     expect(btn.getAttribute("aria-disabled")).toBeNull();

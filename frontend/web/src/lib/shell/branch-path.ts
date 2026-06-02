@@ -5,7 +5,15 @@
  * the nested param) to build sibling nav links for the same branch. Returns null
  * off a branch route or when the branch segment is missing.
  */
-const BRANCH_PREFIXES = ["/pos/", "/shifts/", "/returns/", "/restaurant/floor/", "/restaurant/kds/"];
+const BRANCH_PREFIXES = [
+  "/pos/",
+  "/shifts/",
+  "/returns/",
+  "/catalog/",
+  "/inventory/",
+  "/restaurant/floor/",
+  "/restaurant/kds/",
+];
 
 export function branchIdFromPath(pathname: string): string | null {
   for (const prefix of BRANCH_PREFIXES) {

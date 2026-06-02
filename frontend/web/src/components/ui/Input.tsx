@@ -15,7 +15,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { label, hint, error, className, id, disabled, ...rest },
-  ref,
+  ref
 ) {
   const autoId = useId();
   const inputId = id ?? autoId;
@@ -39,7 +39,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           "focus-visible:ring-2 focus-visible:ring-brand/50",
           "disabled:cursor-not-allowed disabled:opacity-60",
           error ? "border-danger" : "border-border",
-          className,
+          className
         )}
         {...rest}
       />

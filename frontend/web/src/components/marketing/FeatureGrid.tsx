@@ -42,16 +42,9 @@ const FEATURES: Feature[] = [
  *  motion-safe hover lift, no animation library. */
 export function FeatureGrid() {
   return (
-    <section
-      data-testid="feature-grid"
-      aria-labelledby="features-heading"
-      className="bg-surface-2"
-    >
+    <section data-testid="feature-grid" aria-labelledby="features-heading" className="bg-surface-2">
       <div className="mx-auto max-w-6xl px-6 py-20">
-        <h2
-          id="features-heading"
-          className="text-center text-3xl font-bold tracking-tight text-fg"
-        >
+        <h2 id="features-heading" className="text-center text-3xl font-bold tracking-tight text-fg">
           Everything you need to run the floor
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-fg-muted">

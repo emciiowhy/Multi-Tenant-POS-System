@@ -38,15 +38,22 @@ export function AuthScreen() {
 
   // Was the FIRST settled session authenticated? Distinguishes "arrived already
   // signed in" (→ Continue/Switch) from "signed in during this visit" (→ redirect).
+  // This intentionally latches via a ref during render — a one-shot memo of first
+  // paint; computing it synchronously avoids a post-settle flash of the wrong CTA.
+  // Behaviour is covered by AuthScreen.test.tsx, so the conservative react-hooks/refs
+  // rule is suppressed locally rather than refactored (which would change timing).
   const arrivedAuthenticatedRef = useRef<boolean | null>(null);
+  /* eslint-disable react-hooks/refs */
   if (arrivedAuthenticatedRef.current === null && status !== "loading") {
     arrivedAuthenticatedRef.current = status === "authenticated";
   }
+  /* eslint-enable react-hooks/refs */
 
   const onboarding = status === "authenticated" && needsOnboarding(companies);
   const showSignedIn =
     status === "authenticated" &&
     !needsOnboarding(companies) &&
+    // eslint-disable-next-line react-hooks/refs -- render read of the latched ref (see above)
     arrivedAuthenticatedRef.current === true;
 
   // URL → store (deep-link + back button), only while unauthenticated.
@@ -145,7 +152,7 @@ function ModeTab({
       onClick={onClick}
       className={cn(
         "flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors",
-        active ? "bg-brand text-brand-foreground" : "text-fg-muted hover:text-fg",
+        active ? "bg-brand text-brand-foreground" : "text-fg-muted hover:text-fg"
       )}
     >
       {children}

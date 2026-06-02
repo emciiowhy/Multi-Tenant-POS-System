@@ -7,7 +7,7 @@ import { authenticate } from "../../middleware/authenticate.js";
 import { authenticateAccount } from "../../middleware/authenticate-account.js";
 import { requirePermission } from "../../middleware/require-permission.js";
 import { listAccountMemberships } from "../auth/auth.service.js";
-import { createCompanyWithOwner, listRegisters } from "./company.service.js";
+import { createCompanyWithOwner, listBranches, listRegisters } from "./company.service.js";
 
 const createInput = z.object({
   name: z.string().min(1),
@@ -44,6 +44,19 @@ export function companyRouter(revocations: RevocationStore): Router {
     asyncHandler(async (req, res) => {
       if (!req.ctx) throw unauthorized();
       res.json(await listAccountMemberships(req.ctx.accountId));
+    }),
+  );
+
+  // All branches for the active company — powers the dashboard branch picker.
+  // Open to any member (nav context, not a privileged read); RLS scopes it to
+  // the active company. Not behind the subscription gate (companyRouter stays
+  // open), so a lapsed company can still navigate.
+  router.get(
+    "/branches",
+    auth,
+    asyncHandler(async (req, res) => {
+      if (!req.ctx) throw unauthorized();
+      res.json(await listBranches(req.ctx.companyId));
     }),
   );
 

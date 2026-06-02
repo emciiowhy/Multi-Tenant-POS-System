@@ -18,7 +18,7 @@ export function BillingRedirect() {
       onBillingRequired(() => {
         if (pathname !== "/billing") router.push("/billing");
       }),
-    [router, pathname],
+    [router, pathname]
   );
 
   return null;

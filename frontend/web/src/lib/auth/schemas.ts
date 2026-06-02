@@ -41,8 +41,10 @@ export const onboardSchema = z.object({
 export type OnboardInput = z.infer<typeof onboardSchema>;
 
 /** Shape sent to `POST /v1/auth/register` — drops the client-only confirmPassword. */
-export function toRegisterPayload(
-  input: SignUpInput,
-): { email: string; password: string; displayName?: string } {
+export function toRegisterPayload(input: SignUpInput): {
+  email: string;
+  password: string;
+  displayName?: string;
+} {
   return { email: input.email, password: input.password, displayName: input.displayName };
 }

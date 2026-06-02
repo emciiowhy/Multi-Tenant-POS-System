@@ -56,13 +56,18 @@ describe("OnboardingForm", () => {
   it("creates the company and folds the new tenant into the session", async () => {
     createCompany.mockResolvedValue({
       ok: true,
-      membership: { companyId: "c9", companyName: "Acme", companySlug: "acme", roleKey: "company_owner" },
+      membership: {
+        companyId: "c9",
+        companyName: "Acme",
+        companySlug: "acme",
+        roleKey: "company_owner",
+      },
     });
     render(<OnboardingForm />);
     setName("Acme");
     fireEvent.click(screen.getByRole("button", { name: /create workspace/i }));
     expect(createCompany).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Acme", slug: "acme", industry: "retail" }),
+      expect.objectContaining({ name: "Acme", slug: "acme", industry: "retail" })
     );
     await waitFor(() =>
       expect(addCompany).toHaveBeenCalledWith({
@@ -70,7 +75,7 @@ describe("OnboardingForm", () => {
         companyName: "Acme",
         companySlug: "acme",
         roleKey: "company_owner",
-      }),
+      })
     );
   });
 

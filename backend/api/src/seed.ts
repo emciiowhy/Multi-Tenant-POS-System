@@ -30,6 +30,15 @@ const DEMO = {
   slug: "demo-diner",
 };
 
+// A company-less account, so the tenant-less onboarding path (PRD §2.3, slices
+// 5–7) is reproducible from a fixed credential. Unlike DEMO, this one has NO
+// company/membership: it authenticates, lands with activeCompanyId = null, and
+// is routed to the onboarding form to create its first company.
+const ONBOARDING_DEMO = {
+  email: "newbie@demo.vendme.dev",
+  password: "demo-password-123",
+};
+
 export interface SeedResult {
   companyId: string;
   branchId: string;
@@ -80,17 +89,45 @@ async function ensureDemoAccess(companyId: string, accountId: string): Promise<v
   });
 }
 
+/**
+ * Idempotent: ensure a company-less account exists for QA of the tenant-less
+ * onboarding flow. No membership is created, so login yields activeCompanyId =
+ * null. `accounts` is a global/platform table, so this runs on the unscoped
+ * `db` handle (same path as the demo owner insert below), not under RLS.
+ */
+async function ensureOnboardingAccount(): Promise<void> {
+  const [existing] = await db
+    .select({ id: tables.accounts.id })
+    .from(tables.accounts)
+    .where(eq(tables.accounts.email, ONBOARDING_DEMO.email))
+    .limit(1);
+  if (existing) return;
+
+  // No emailVerifiedAt — mirrors a genuinely fresh registration (and
+  // verifyCredentials doesn't gate on it).
+  const passwordHash = await hashPassword(ONBOARDING_DEMO.password);
+  await db.insert(tables.accounts).values({
+    email: ONBOARDING_DEMO.email,
+    passwordHash,
+    displayName: "Newbie Owner",
+  });
+}
+
 function printAccess(branchId: string): void {
   // eslint-disable-next-line no-console
   console.log(`
 ✓ Demo ready.
-  Login:  ${DEMO.email} / ${DEMO.password}
-  Floor:  http://localhost:3000/restaurant/floor/${branchId}
-  KDS:    http://localhost:3000/restaurant/kds/${branchId}
+  Login:       ${DEMO.email} / ${DEMO.password}
+  Onboarding:  ${ONBOARDING_DEMO.email} / ${ONBOARDING_DEMO.password}  (no company → onboarding flow)
+  Floor:       http://localhost:3000/restaurant/floor/${branchId}
+  KDS:         http://localhost:3000/restaurant/kds/${branchId}
 `);
 }
 
 export async function seedDemo(): Promise<SeedResult> {
+  // Ensured on every run (including reseeds), independent of the demo company.
+  await ensureOnboardingAccount();
+
   const [existing] = await db
     .select({ id: tables.accounts.id })
     .from(tables.accounts)

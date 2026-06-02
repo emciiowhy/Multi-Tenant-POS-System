@@ -106,7 +106,7 @@ export function OfflineIndicator() {
         aria-hidden
         className={cn(
           "size-2 shrink-0 rounded-full",
-          offline.tone === "warning" ? "bg-warning" : "bg-success",
+          offline.tone === "warning" ? "bg-warning" : "bg-success"
         )}
       />
       {offline.kind === "online" && <span className="sr-only">All changes synced</span>}

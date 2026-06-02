@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { navItemsFor } from "@/lib/shell/nav-model";
 import { branchIdFromPath } from "@/lib/shell/branch-path";
 import { useSidebarStore } from "@/lib/shell/sidebar-store";
+import { rememberedBranchFor, useActiveBranchStore } from "@/lib/shell/active-branch-store";
+import { useHydrated } from "@/lib/shell/use-hydrated";
 import { cn } from "@/lib/ui/cn";
 import { Sidebar } from "./Sidebar";
 import { TenantSwitcher } from "@/components/auth/TenantSwitcher";
@@ -18,6 +20,8 @@ export interface AppShellNavContext {
   /** Resolved permission keys; `"*"` means superuser. */
   permissions: string[];
   enabledModules: Record<string, boolean>;
+  /** Active company — scopes the remembered-branch fallback. */
+  companyId?: string | null;
 }
 
 /**
@@ -34,7 +38,26 @@ export function AppShell({
   children: ReactNode;
 }) {
   const pathname = usePathname() ?? "/";
-  const branchId = branchIdFromPath(pathname);
+  const urlBranch = branchIdFromPath(pathname);
+  const companyId = navContext.companyId ?? null;
+
+  // Persist the branch whenever we're on a branch route, so global pages
+  // (/billing, /home) can fall back to it and keep the sidebar intact.
+  const remember = useActiveBranchStore((s) => s.remember);
+  const storedCompanyId = useActiveBranchStore((s) => s.companyId);
+  const storedBranchId = useActiveBranchStore((s) => s.branchId);
+  useEffect(() => {
+    if (urlBranch && companyId) remember(companyId, urlBranch);
+  }, [urlBranch, companyId, remember]);
+
+  // The persisted fallback differs between server (empty) and client (populated),
+  // so only apply it after hydration to avoid a hydration mismatch.
+  const hydrated = useHydrated();
+  const fallbackBranch = hydrated
+    ? rememberedBranchFor({ companyId: storedCompanyId, branchId: storedBranchId }, companyId)
+    : null;
+  const branchId = urlBranch ?? fallbackBranch;
+
   const collapsed = useSidebarStore((s) => s.collapsed);
   const toggleCollapse = useSidebarStore((s) => s.toggle);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -44,7 +67,7 @@ export function AppShell({
     isSuper || navContext.permissions.includes(permission);
   const items = navItemsFor(
     { role: navContext.role, enabledModules: navContext.enabledModules, branchId },
-    can,
+    can
   );
 
   const closeDrawer = () => setDrawerOpen(false);
@@ -64,7 +87,7 @@ export function AppShell({
         data-state={drawerOpen ? "open" : "closed"}
         className={cn(
           "fixed inset-y-0 left-0 z-40 transition-transform md:static md:translate-x-0",
-          drawerOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          drawerOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
         <Sidebar

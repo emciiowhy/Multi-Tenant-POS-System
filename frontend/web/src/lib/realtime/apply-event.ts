@@ -12,7 +12,7 @@ type TableChangedEvent = Extract<RealtimeEvent, { type: "table.changed" }>;
  */
 export function applyKdsEvent(
   tickets: KitchenTicket[],
-  event: KitchenTicketEvent,
+  event: KitchenTicketEvent
 ): KitchenTicket[] {
   return tickets
     .map((t) => (t.id === event.ticketId ? { ...t, status: event.status } : t))
@@ -20,14 +20,9 @@ export function applyKdsEvent(
 }
 
 /** Applies a table-status delta to the floor plan, in place. Pure. */
-export function applyTableEvent(
-  plan: FloorPlan,
-  event: TableChangedEvent,
-): FloorPlan {
+export function applyTableEvent(plan: FloorPlan, event: TableChangedEvent): FloorPlan {
   return {
     ...plan,
-    tables: plan.tables.map((t) =>
-      t.id === event.tableId ? { ...t, status: event.status } : t,
-    ),
+    tables: plan.tables.map((t) => (t.id === event.tableId ? { ...t, status: event.status } : t)),
   };
 }

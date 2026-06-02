@@ -25,7 +25,7 @@ describe("Badge", () => {
     render(
       <Badge variant="warning" status="active">
         Trial ending
-      </Badge>,
+      </Badge>
     );
     expect(screen.getByText("Trial ending").className).toContain("text-warning");
   });

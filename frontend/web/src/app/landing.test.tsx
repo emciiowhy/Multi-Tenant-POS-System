@@ -37,7 +37,7 @@ describe("Landing page", () => {
 
     expect(screen.getByTestId("landing-hero")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(
-      /offline|point of sale|pos/i,
+      /offline|point of sale|pos/i
     );
 
     // Feature grid showcases the core capabilities (POS, Shifts) + upcoming Restaurant.

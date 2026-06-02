@@ -61,9 +61,7 @@ export default function KdsPage({ params }: { params: Promise<{ branchId: string
                   const next = NEXT_KDS[t.status];
                   return (
                     <li key={t.id} className="rounded-md bg-neutral-800 p-3">
-                      <p className="font-mono text-xs text-neutral-400">
-                        #{t.orderId.slice(0, 8)}
-                      </p>
+                      <p className="font-mono text-xs text-neutral-400">#{t.orderId.slice(0, 8)}</p>
                       <p className="mt-1 text-sm">
                         Fired {new Date(t.firedAt).toLocaleTimeString()}
                       </p>

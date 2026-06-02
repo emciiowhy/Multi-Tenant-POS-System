@@ -21,13 +21,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const role =
     session?.memberships.find((m) => m.companyId === session.activeCompanyId)?.roleKey ?? "";
   const permissions = role ? [...resolvePermissions(role)] : [];
+  const companyId = session?.activeCompanyId ?? null;
 
   return (
     // InterceptorProvider (slice 07) wraps the shell so the header indicator, the
     // banner slot, and page actions share one subscription/connectivity read; it
     // sits above AppShell (which stays QueryClient-free for its unit tests).
     <InterceptorProvider>
-      <AppShell navContext={{ role, permissions, enabledModules: {} }}>{children}</AppShell>
+      <AppShell navContext={{ role, permissions, enabledModules: {}, companyId }}>
+        {children}
+      </AppShell>
     </InterceptorProvider>
   );
 }

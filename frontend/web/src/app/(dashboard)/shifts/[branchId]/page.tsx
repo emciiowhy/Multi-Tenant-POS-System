@@ -1,7 +1,8 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useState } from "react";
 import { useActiveShift } from "@/lib/pos/shift/active-shift";
+import { useHydrated } from "@/lib/shell/use-hydrated";
 import {
   useAddCashMovement,
   useCloseShift,
@@ -26,8 +27,7 @@ const SELECT_CLASS =
 export default function ShiftPage({ params }: { params: Promise<{ branchId: string }> }) {
   const { branchId } = use(params);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
 
   const shift = useActiveShift((s) => s.shift);
   const setShift = useActiveShift((s) => s.setShift);
@@ -43,9 +43,11 @@ export default function ShiftPage({ params }: { params: Promise<{ branchId: stri
   const [cashAmount, setCashAmount] = useState("");
   const [cashReason, setCashReason] = useState<CashReason>("pay_in");
   const [counted, setCounted] = useState("");
-  const [closure, setClosure] = useState<
-    { expected: string; counted: string; variance: string } | null
-  >(null);
+  const [closure, setClosure] = useState<{
+    expected: string;
+    counted: string;
+    variance: string;
+  } | null>(null);
 
   async function onOpen() {
     if (!registerId) return;

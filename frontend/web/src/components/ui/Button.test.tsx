@@ -23,7 +23,7 @@ describe("Button", () => {
     render(
       <Button loading onClick={onClick}>
         Charge
-      </Button>,
+      </Button>
     );
     const spinner = screen.getByTestId("button-spinner");
     expect(spinner).toBeTruthy();
@@ -39,7 +39,7 @@ describe("Button", () => {
     render(
       <Button disabled onClick={onClick}>
         Go
-      </Button>,
+      </Button>
     );
     fireEvent.click(screen.getByRole("button", { name: "Go" }));
     expect(onClick).not.toHaveBeenCalled();
@@ -50,7 +50,7 @@ describe("Button", () => {
     render(
       <Button blockedReason="Subscription past due" onClick={onClick}>
         Charge
-      </Button>,
+      </Button>
     );
     const btn = screen.getByRole("button", { name: /charge/i });
     expect(btn.getAttribute("aria-disabled")).toBe("true");

@@ -21,13 +21,17 @@ export function useOutboxPending(): number {
 /** Live status (+ reason) of one outbox entry — drives the receipt's
  * provisional/confirmed/rejected state. */
 export function useOutboxEntry(
-  id: string | null,
+  id: string | null
 ): { status: OutboxStatus; reason?: string } | undefined {
   const [entry, setEntry] = useState<{ status: OutboxStatus; reason?: string } | undefined>(
-    undefined,
+    undefined
   );
   useEffect(() => {
     if (!id) {
+      // Reset when the tracked id clears. Intentional and timing-critical for the
+      // receipt state machine; a useSyncExternalStore refactor would re-derive a
+      // new object each snapshot and loop, so the rule is suppressed here.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEntry(undefined);
       return;
     }
@@ -48,10 +52,10 @@ export function useOutboxFailed(): { id: string; reason: string }[] {
         setFailed(
           entries
             .filter((e) => e.status === "failed")
-            .map((e) => ({ id: e.id, reason: e.lastError ?? "rejected" })),
-        ),
+            .map((e) => ({ id: e.id, reason: e.lastError ?? "rejected" }))
+        )
       ),
-    [],
+    []
   );
   return failed;
 }
@@ -85,7 +89,7 @@ export function useChargeSale(branchId: string) {
 
   async function charge(
     items: CartItem[],
-    tender: { method: TenderMethod; amount: string },
+    tender: { method: TenderMethod; amount: string }
   ): Promise<ChargeResult> {
     setPending(true);
     try {

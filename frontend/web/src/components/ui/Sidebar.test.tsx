@@ -34,15 +34,17 @@ describe("Sidebar", () => {
 
   it("marks the active link (incl. nested route) with aria-current and not the others", () => {
     render(
-      <Sidebar items={items} pathname="/pos/b1/receipt" collapsed={false} onToggleCollapse={noop} />,
+      <Sidebar items={items} pathname="/pos/b1/receipt" collapsed={false} onToggleCollapse={noop} />
     );
-    expect(screen.getByRole("link", { name: /register/i }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: /register/i }).getAttribute("aria-current")).toBe(
+      "page"
+    );
     expect(screen.getByRole("link", { name: /shifts/i }).getAttribute("aria-current")).toBeNull();
   });
 
   it("reflects the collapsed state on the root", () => {
     const { rerender } = render(
-      <Sidebar items={items} pathname="/billing" collapsed={false} onToggleCollapse={noop} />,
+      <Sidebar items={items} pathname="/billing" collapsed={false} onToggleCollapse={noop} />
     );
     expect(screen.getByTestId("sidebar").getAttribute("data-collapsed")).toBe("false");
     rerender(<Sidebar items={items} pathname="/billing" collapsed onToggleCollapse={noop} />);
@@ -51,7 +53,9 @@ describe("Sidebar", () => {
 
   it("calls onToggleCollapse when the collapse control is clicked", () => {
     const onToggle = vi.fn();
-    render(<Sidebar items={items} pathname="/billing" collapsed={false} onToggleCollapse={onToggle} />);
+    render(
+      <Sidebar items={items} pathname="/billing" collapsed={false} onToggleCollapse={onToggle} />
+    );
     fireEvent.click(screen.getByRole("button", { name: /collapse sidebar/i }));
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
@@ -65,7 +69,7 @@ describe("Sidebar", () => {
         collapsed={false}
         onToggleCollapse={noop}
         onNavigate={onNavigate}
-      />,
+      />
     );
     fireEvent.click(screen.getByRole("link", { name: /register/i }));
     expect(onNavigate).toHaveBeenCalled();

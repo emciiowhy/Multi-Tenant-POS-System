@@ -1,11 +1,7 @@
 "use client";
 
 import { io, type Socket } from "socket.io-client";
-import type {
-  RealtimeEvent,
-  SocketSubscribeInput,
-  SocketSubscribeResult,
-} from "@vendme/contracts";
+import type { RealtimeEvent, SocketSubscribeInput, SocketSubscribeResult } from "@vendme/contracts";
 import { publicApiUrl } from "@/lib/env";
 import { getAccessToken } from "@/lib/access-token-client";
 
@@ -13,10 +9,7 @@ interface ServerToClient {
   sync: (event: RealtimeEvent) => void;
 }
 interface ClientToServer {
-  subscribe: (
-    input: SocketSubscribeInput,
-    ack: (result: SocketSubscribeResult) => void,
-  ) => void;
+  subscribe: (input: SocketSubscribeInput, ack: (result: SocketSubscribeResult) => void) => void;
 }
 
 export type RealtimeSocket = Socket<ServerToClient, ClientToServer>;

@@ -76,7 +76,7 @@ export function OnboardingForm() {
       setFormError(
         res.error === "unauthenticated"
           ? "Your session expired — please sign in again."
-          : "Couldn't create your workspace. Please try again.",
+          : "Couldn't create your workspace. Please try again."
       );
       return;
     }
@@ -86,7 +86,12 @@ export function OnboardingForm() {
   }
 
   return (
-    <form data-testid="onboarding-form" onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+    <form
+      data-testid="onboarding-form"
+      onSubmit={onSubmit}
+      className="flex flex-col gap-4"
+      noValidate
+    >
       <div className="space-y-1">
         <h1 className="text-xl font-semibold text-fg">Create your workspace</h1>
         <p className="text-sm text-fg-muted">

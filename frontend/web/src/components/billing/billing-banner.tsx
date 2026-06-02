@@ -35,7 +35,10 @@ function describe(state: Exclude<ReturnType<typeof bannerState>, { kind: "none" 
     case "trial_expired":
       return { message: "Your free trial has ended.", cta: "Subscribe" };
     case "past_due":
-      return { message: "Your last payment failed — update your billing to avoid losing access.", cta: "Fix payment" };
+      return {
+        message: "Your last payment failed — update your billing to avoid losing access.",
+        cta: "Fix payment",
+      };
     case "blocked":
       return { message: `Your subscription is ${state.status}.`, cta: "Manage billing" };
   }

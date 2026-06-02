@@ -1,13 +1,7 @@
 import type { PosEvent } from "@vendme/contracts";
 import type { CartItem } from "./cart-logic";
 
-export type TenderMethod =
-  | "cash"
-  | "card"
-  | "bank_transfer"
-  | "cheque"
-  | "gift_card"
-  | "loyalty";
+export type TenderMethod = "cash" | "card" | "bank_transfer" | "cheque" | "gift_card" | "loyalty";
 
 export interface SaleBatch {
   /** Batch id — the Outbox dedupe key. */

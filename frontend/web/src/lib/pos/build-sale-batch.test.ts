@@ -22,11 +22,7 @@ describe("buildSaleBatch", () => {
       uuid: counter(),
     });
     expect(b.kind).toBe("pos.sale");
-    expect(b.events.map((e) => e.type)).toEqual([
-      "order.open",
-      "order.fire",
-      "order.settle",
-    ]);
+    expect(b.events.map((e) => e.type)).toEqual(["order.open", "order.fire", "order.settle"]);
   });
 
   it("shares one orderClientUuid across all events; each event gets a distinct client_uuid", () => {
@@ -36,9 +32,7 @@ describe("buildSaleBatch", () => {
       tender: { method: "cash", amount: "23.00" },
       uuid: counter(),
     });
-    expect(new Set(b.events.map((e) => e.orderClientUuid))).toEqual(
-      new Set([b.orderClientUuid]),
-    );
+    expect(new Set(b.events.map((e) => e.orderClientUuid))).toEqual(new Set([b.orderClientUuid]));
     expect(new Set(b.events.map((e) => e.clientUuid)).size).toBe(3);
     expect(b.id).not.toBe(b.orderClientUuid);
   });

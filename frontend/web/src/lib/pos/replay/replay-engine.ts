@@ -115,10 +115,13 @@ export class ReplayEngine {
 
   private scheduleRetry(attempts: number): void {
     this.clearTimer();
-    this.timer = setTimeout(() => {
-      this.timer = null;
-      void this.flush();
-    }, backoffDelay(attempts, this.baseMs, this.capMs));
+    this.timer = setTimeout(
+      () => {
+        this.timer = null;
+        void this.flush();
+      },
+      backoffDelay(attempts, this.baseMs, this.capMs)
+    );
   }
 
   private clearTimer(): void {

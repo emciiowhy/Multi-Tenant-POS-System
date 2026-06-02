@@ -35,7 +35,5 @@ export function isBillingError(err: unknown): boolean {
 }
 
 function statusOf(err: unknown): number | undefined {
-  return typeof err === "object" && err !== null
-    ? (err as { status?: number }).status
-    : undefined;
+  return typeof err === "object" && err !== null ? (err as { status?: number }).status : undefined;
 }

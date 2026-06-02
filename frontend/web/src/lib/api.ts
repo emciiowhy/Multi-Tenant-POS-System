@@ -7,7 +7,7 @@ import { notifyBillingRequired } from "@/lib/billing/billing-redirect";
 export class ApiError extends Error {
   constructor(
     readonly status: number,
-    message: string,
+    message: string
   ) {
     super(message);
   }

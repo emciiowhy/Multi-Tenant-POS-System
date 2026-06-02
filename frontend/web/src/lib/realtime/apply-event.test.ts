@@ -40,7 +40,10 @@ describe("applyKdsEvent", () => {
   });
 });
 
-const table = (id: string, status: FloorPlan["tables"][number]["status"]): FloorPlan["tables"][number] => ({
+const table = (
+  id: string,
+  status: FloorPlan["tables"][number]["status"]
+): FloorPlan["tables"][number] => ({
   id,
   branchId: "00000000-0000-0000-0000-000000000002",
   sectionId: null,
@@ -67,8 +70,15 @@ describe("applyTableEvent", () => {
   });
 
   it("preserves table layout fields", () => {
-    const plan: FloorPlan = { sections: [], tables: [{ ...table("t1", "free"), posX: 120, posY: 40 }] };
-    const after = applyTableEvent(plan, { type: "table.changed", tableId: "t1", status: "ordered" });
+    const plan: FloorPlan = {
+      sections: [],
+      tables: [{ ...table("t1", "free"), posX: 120, posY: 40 }],
+    };
+    const after = applyTableEvent(plan, {
+      type: "table.changed",
+      tableId: "t1",
+      status: "ordered",
+    });
     expect(after.tables[0]).toMatchObject({ posX: 120, posY: 40, status: "ordered" });
   });
 });

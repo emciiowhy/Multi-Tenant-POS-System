@@ -5,8 +5,6 @@
  * 409). Rather than drop such a session on a broken dashboard, the auth screen
  * sends it to the Onboarding state to create its first tenant.
  */
-export function needsOnboarding(
-  memberships: readonly unknown[] | null | undefined,
-): boolean {
+export function needsOnboarding(memberships: readonly unknown[] | null | undefined): boolean {
   return !memberships || memberships.length === 0;
 }

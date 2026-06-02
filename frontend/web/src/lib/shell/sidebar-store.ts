@@ -26,8 +26,8 @@ export const useSidebarStore = create<SidebarState>()(
     {
       name: "vendme-sidebar",
       storage: createJSONStorage(() =>
-        typeof window !== "undefined" ? window.localStorage : noopStorage,
+        typeof window !== "undefined" ? window.localStorage : noopStorage
       ),
-    },
-  ),
+    }
+  )
 );

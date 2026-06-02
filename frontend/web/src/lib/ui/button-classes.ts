@@ -49,7 +49,7 @@ const SIZES: Record<ButtonSize, string> = {
 export function buttonClasses(
   variant: ButtonVariant,
   size: ButtonSize,
-  state: ButtonStateOptions = {},
+  state: ButtonStateOptions = {}
 ): string {
   const inert = isButtonInert(state);
   return cn(
@@ -61,6 +61,6 @@ export function buttonClasses(
       ? "cursor-not-allowed opacity-60"
       : // Micro-interactions only when interactive; gated behind motion-safe so
         // prefers-reduced-motion users get no scaling.
-        "cursor-pointer motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]",
+        "cursor-pointer motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]"
   );
 }
